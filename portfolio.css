@@ -1,0 +1,153 @@
+/*
+ * Stylesheet by Pol Rosello. Replicates Jon Barron's personal website design but
+ * also makes it responsive for mobile devices. Color scheme is adapted from Segey
+ * Karayev.
+ */
+
+* {
+    box-sizing: border-box;
+}
+
+.row::after {
+    content: "";
+    clear: both;
+    display: table;
+    justify-content: center;
+}
+
+/* Spacing between rows */
+.row + .row { margin-top: 40px; }
+
+/* For mobile phones: */
+[class*="col-"] {
+    width: 100%;
+}
+
+/*.col-prof-pic { margin:auto; }*/
+.col-proj-pic { display:none; }
+/*.col-proj-pic{margin:0 auto;}*/
+.container {
+    width:max-width;
+    padding:15px;
+}
+
+ul {
+    list-style: none;
+    margin-left: 0px;
+    padding-left: 15px;
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+    columns: 1;
+    -webkit-columns: 1;
+    -moz-columns: 1;
+}
+
+@media only screen and (min-width: 500px) {
+    /* For desktop: */
+    .container {
+        max-width:840px;
+        margin:auto;
+    }
+    .col-bio {max-width: 65%;}
+    .col-prof-pic {float:right; margin-left:10px;}
+    .col-proj-pic {max-width: 25%; float:left; display:inline; padding-right: 20px}
+    .col-proj-desc {max-width: 75%; float:right;}
+}
+
+@media only screen and (min-width: 800px) {
+    /* For desktop: */
+    ul {
+        columns: 2;
+        -webkit-columns: 2;
+        -moz-columns: 2;
+    }
+}
+
+
+a {
+    color: #1772d0;
+    text-decoration:none;
+}
+
+a:focus, a:hover {
+    color: #f09228;
+    text-decoration:none;
+}
+
+body,td,th,tr,p,a {
+    font-family: 'Lato', Verdana, Helvetica, sans-serif;
+    font-size: 14px;
+    line-height:140%;
+}
+
+strong {
+    font-family: 'Lato', Verdana, Helvetica, sans-serif;
+    font-size: 14px;
+}
+
+heading {
+    font-family: 'Lato', Verdana, Helvetica, sans-serif;
+    font-size: 22px;
+}
+
+subheading{
+    font-family: 'Lato', Verdana, Helvetica, sans-serif;
+    font-size: 18px;
+}
+
+papertitle {
+    font-family: 'Lato', Verdana, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+name {
+    font-family: 'Lato', Verdana, Helvetica, sans-serif;
+    font-size: 32px;
+}
+
+.col-proj-pic img {
+    max-width: 100%;
+    height: 150px;
+    align-content: middle;
+    /*vertical-align: middle;*/
+    /*style="vertical-align:middle"*/
+}
+
+.cropcircle {
+    border-radius: 100%;
+    background: #eee no-repeat center;
+    background-size: cover;
+}
+
+#profile-img{
+    height: 250px;
+    width: 250px;
+    background-image: url(img/AndreMotta.jpg);
+}
+
+span.highlight {
+    background-color: #ffffd0;
+}
+
+label {
+    font-family: 'Lato', Verdana, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.reveal {
+  max-height: 0;
+  transition: max-height 0.15s ease-out;
+  overflow: hidden;
+}
+
+input:checked + label + .reveal {
+  max-height: 500px;
+  transition: max-height 0.25s ease-in;
+}
+    
+input + label:after { content: " (Show)"; }
+input:checked + label:after { content: " (Hide)"; }
+
