@@ -1,0 +1,59 @@
+{
+    "basic_info": {
+      "name": "Andre Lustosa",
+      "titles": [ "PhD Student", "CTO","Full-Stack Engineer", "Machine Learning Engineer" ],
+      "social": [
+        {
+          "name": "github",
+          "url": "https://github.com/andre-motta",
+          "class": "fab fa-github"
+        },
+        {
+          "name": "instagram",
+          "url": "https://www.instagram.com/sargehawk",
+          "class": "fab fa-instagram"
+        }
+      ],
+      "resume": "pdf/USA_STEM_CV.pdf",
+      "image": "myProfile.jpg"
+    },
+    "skills": {
+      "icons": [
+        {
+          "name": "C#",
+          "class": "devicon-csharp-plain",
+          "level": "95"
+        },
+        {
+          "name": "Python",
+          "class": "devicon-python-plain",
+          "level": "95"
+        },
+        {
+          "name": "Angular",
+          "class": "devicon-angularjs-plain",
+          "level": "90"
+        },
+        {
+          "name": "TypeScript",
+          "class": "devicon-typescript-plain",
+          "level": "90"
+        },
+        {
+          "name": "JavaScript",
+          "class": "devicon-javascript-plain",
+          "level": "70"
+        },
+        {
+          "name": "HTML5",
+          "class": "devicon-html5-plain",
+          "level": "70"
+        },
+        {
+          "name": "SQL Server",
+          "class": "devicon-microsoftsqlserver-plain",
+          "level": "80"
+        }
+      ]
+    }
+  }
