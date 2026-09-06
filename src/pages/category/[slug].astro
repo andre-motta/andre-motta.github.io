@@ -1,0 +1,38 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { articlePath, categoryPath, categorySlug, formatDate, getArticles, isoDate } from '../../lib/articles';
+
+export async function getStaticPaths() {
+  const articles = await getArticles();
+  const categories = [...new Set(articles.map((article) => article.data.category))];
+  return categories.map((category) => ({
+    params: { slug: categorySlug(category) },
+    props: { category, articles: articles.filter((article) => article.data.category === category) },
+  }));
+}
+
+const { category, articles } = Astro.props;
+---
+<BaseLayout title={category} description={`Writing in ${category} by Andre Lustosa.`} canonicalPath={categoryPath(category)}>
+  <article class="page-shell">
+    <header class="page-header">
+      <p class="eyebrow">ANDRE LUSTOSA / TOPIC</p>
+      <h1 class="page-title">{category}</h1>
+      <p class="page-intro">{articles.length} {articles.length === 1 ? 'entry' : 'entries'} in this topic.</p>
+    </header>
+
+    <ol class="listing">
+      {articles.map((article) => (
+        <li class="listing-item">
+          <div class="listing-meta"><time datetime={isoDate(article.data.date)}>{formatDate(article.data.date)}</time></div>
+          <div>
+            <h2><a href={articlePath(article)}>{article.data.title}</a></h2>
+            <p>{article.data.description}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+
+    <p class="topic-nav"><a href="/archives.html">← All writing</a></p>
+  </article>
+</BaseLayout>

@@ -1,0 +1,27 @@
+{
+  "name": "andre-motta-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "dev:preview": "INCLUDE_DRAFTS=true astro dev --mode preview",
+    "build": "astro build",
+    "build:preview": "INCLUDE_DRAFTS=true astro build --mode preview --outDir output-preview",
+    "preview": "astro preview",
+    "check": "astro check",
+    "cv:sync": "python3 scripts/import-cv.py --source-dir ../personal_cv --output .generated/cv.json --pdf-destination public/extra/Andre_Motta_Resume.pdf",
+    "cv:fixture": "python3 scripts/import-cv.py --fixture --output .generated/cv.json",
+    "test:cv": "python3 scripts/test_import_cv.py",
+    "verify": "python scripts/verify_site.py"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@types/node": "^22.0.0",
+    "astro": "^7.3.1",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,110 @@
+---
+import profile from '../data/profile.json';
+import projects from '../data/projects.json';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { articlePath, formatDate, getArticles } from '../lib/articles';
+
+const articles = await getArticles();
+const featured = articles.find((article) => article.data.featured) ?? articles[0];
+const remaining = featured ? articles.filter((article) => article.id !== featured.id).slice(0, 5) : [];
+const selectedProjects = projects.filter((project) => project.featured).slice(0, 3);
+---
+<BaseLayout title={profile.name} description={profile.intro} canonicalPath="/">
+  <div class="home-shell">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">ANDRE LUSTOSA / ENGINEER &amp; TEAM LEAD</p>
+        <h1 class="hero-title" id="hero-title">Engineering<br class="hero-title-break" /> the foundations.</h1>
+        <p class="hero-intro">I build reliable software platforms, lead engineering teams, and work in the open.</p>
+        <div class="hero-links">
+          <a class="text-link" href="#writing">Read the writing</a>
+          <a class="text-link" href="/about.html">About me</a>
+        </div>
+      </div>
+
+      <aside class="focus-panel" aria-labelledby="focus-title">
+        <h2 class="focus-heading" id="focus-title">Focus</h2>
+        <ol class="focus-list">
+          {profile.focus.map((item, index) => (
+            <li>
+              <span class="focus-number">{String(index + 1).padStart(2, '0')}</span>
+              <div>
+                <h3 class="focus-title">{item.title}</h3>
+                <p class="focus-description">{item.description}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </aside>
+    </section>
+
+    <section class="section-block" id="writing" aria-labelledby="writing-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-label">01 / Writing</p>
+          <h2 class="section-title" id="writing-title">Selected writing</h2>
+        </div>
+        <a class="section-link" href="/archives.html">View all writing ↗</a>
+      </div>
+
+      {featured ? (
+        <>
+          <a class="featured-writing" href={articlePath(featured)}>
+            <div>
+              <p class="meta">{featured.data.category} · {formatDate(featured.data.date)}</p>
+              <h3 class="writing-title">{featured.data.title}</h3>
+              <p class="writing-summary">{featured.data.description}</p>
+            </div>
+            {featured.data.readTime && <div class="writing-aside"><p>{featured.data.readTime}</p></div>}
+          </a>
+          {remaining.length > 0 && (
+            <div class="writing-rows">
+              {remaining.map((article) => (
+                <a class="writing-row" href={articlePath(article)}>
+                  <div>
+                    <p class="meta">{article.data.category}</p>
+                    <h3 class="writing-title">{article.data.title}</h3>
+                    <p class="row-summary">{article.data.description}</p>
+                  </div>
+                  <p class="meta">{formatDate(article.data.date)}{article.data.readTime ? ` · ${article.data.readTime}` : ''}</p>
+                </a>
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        <p class="empty-state">Writing will appear here as it is published.</p>
+      )}
+    </section>
+
+    {selectedProjects.length > 0 && (
+      <section class="section-block" aria-labelledby="projects-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-label">02 / Projects</p>
+            <h2 class="section-title" id="projects-title">Selected projects</h2>
+          </div>
+          <a class="section-link" href="/projects.html">View all projects ↗</a>
+        </div>
+        <div class="projects-grid">
+          {selectedProjects.map((project, index) => (
+            <article class="project-item">
+              <p class="project-number">{String(index + 1).padStart(2, '0')}</p>
+              <a class="project-name" href={project.url}>{project.name} ↗</a>
+              <p class="project-role">{project.role}</p>
+              <p class="project-description">{project.description}</p>
+              <div class="project-tags" aria-label={`${project.name} topics`}>
+                {project.tags.map((tag) => <span>{tag}</span>)}
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <section class="section-block home-byline" aria-label="Profile">
+      <p class="section-label">03 / Profile</p>
+      <p class="home-byline-text">Principal Software Engineer at Red Hat · PhD in Computer Science · Raleigh, NC.</p>
+    </section>
+  </div>
+</BaseLayout>

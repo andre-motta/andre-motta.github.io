@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  target: string;
+  targetLabel: string;
+  message: string;
+}
+
+const { title, description, target, targetLabel, message } = Astro.props;
+---
+<BaseLayout title={title} description={description} canonicalPath={target} noindex>
+  <meta slot="head" http-equiv="refresh" content={`0; url=${target}`} />
+  <article class="page-shell legacy-redirect">
+    <header class="page-header">
+      <p class="eyebrow">ALUSTOS.US / MOVED</p>
+      <h1 class="page-title">{title}</h1>
+      <p class="page-intro">{message}</p>
+    </header>
+    <p class="topic-nav"><a href={target}>{targetLabel} ↗</a></p>
+  </article>
+</BaseLayout>

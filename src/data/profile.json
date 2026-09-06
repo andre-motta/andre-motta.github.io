@@ -1,0 +1,25 @@
+{
+  "name": "Andre Lustosa",
+  "role": "Principal Software Engineer & Team Lead",
+  "organization": "Red Hat",
+  "location": "Raleigh, North Carolina",
+  "email": "alustosa@redhat.com",
+  "headline": "Engineering the foundations.",
+  "intro": "I build reliable software platforms, lead engineering teams, and work in the open.",
+  "about": [
+    "I'm a Principal Software Engineer and Team Lead at Red Hat. My work sits where software foundations, accelerator ecosystems, and engineering leadership meet: making complex systems dependable enough for other people to build on.",
+    "I lead engineering work on enterprise Python components and accelerator enablement. That includes package compatibility, cross-architecture validation, software supply chain controls, and vulnerability maintenance. I care about the decisions, evidence, and ownership that make this work sustainable.",
+    "I earned my PhD in Computer Science at North Carolina State University in 2025. My research explored interactive search and optimization for software product-line configuration, with an emphasis on reducing the effort required from decision-makers. Before that, I led software engineering at Oceansoft and worked on data analysis and predictive tooling during an internship at Microsoft.",
+    "This is where I write about building software, contributing upstream, and helping engineering teams do their best work. I also build developer tools that make everyday engineering work easier to understand and act on."
+  ],
+  "focus": [
+    {"title": "Software foundations", "description": "Python packaging, supply chains, and systems that hold up in production."},
+    {"title": "Accelerator ecosystems", "description": "Compatibility and validation across CPU, CUDA, and ROCm environments."},
+    {"title": "Engineering leadership", "description": "Clear decisions, shared ownership, and teams that can move with confidence."}
+  ],
+  "links": [
+    {"label": "GitHub", "url": "https://github.com/andre-motta"},
+    {"label": "LinkedIn", "url": "https://www.linkedin.com/in/andre-motta/"},
+    {"label": "Google Scholar", "url": "https://scholar.google.com/citations?user=lQwnqkwAAAAJ&hl=en"}
+  ]
+}

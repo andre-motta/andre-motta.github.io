@@ -1,4 +1,13 @@
 output/
+/.wiki/
+output-preview/
+dist/
+.generated/
+.cv-source/
+node_modules/
+.astro/
+public/extra/Andre_Motta_Resume.pdf
+content/extra/Andre_Motta_Resume.pdf
 *.pyc
 __pycache__/
 *.pid

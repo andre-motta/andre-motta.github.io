@@ -1,0 +1,104 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { articlePath, categoryPath, categorySlug, formatDate, getArticles, isoDate } from '../lib/articles';
+
+const articles = await getArticles();
+const topics = [...new Set(articles.map((article) => article.data.category))]
+  .sort((a, b) => a.localeCompare(b))
+  .map((name) => ({ name, slug: categorySlug(name) }));
+---
+<BaseLayout title="Writing" description="Writing by Andre Lustosa about software foundations, accelerator ecosystems, and engineering leadership." canonicalPath="/archives.html">
+  <article class="page-shell">
+    <header class="page-header">
+      <p class="eyebrow">ANDRE LUSTOSA / WRITING</p>
+      <h1 class="page-title">A working library.</h1>
+      <p class="page-intro">Notes on building dependable software, contributing upstream, and helping engineering teams move with confidence.</p>
+    </header>
+
+    <section aria-labelledby="archive-heading">
+      <div class="section-heading">
+        <div>
+          <p class="section-label">Archive</p>
+          <h2 class="section-title" id="archive-heading">All writing</h2>
+        </div>
+        <p class="archive-count" data-archive-count>{articles.length} {articles.length === 1 ? 'entry' : 'entries'}</p>
+      </div>
+
+      <form class="listing-tools" data-archive-form>
+        <div>
+          <label class="field-label" for="archive-search">Search the library</label>
+          <input class="field-control" id="archive-search" type="search" placeholder="Title, topic, or keyword" autocomplete="off" data-archive-search />
+        </div>
+        <div>
+          <label class="field-label" for="archive-topic">Filter by topic</label>
+          <select class="field-control" id="archive-topic" data-archive-topic>
+            <option value="all">All topics</option>
+            {topics.map((topic) => <option value={topic.slug}>{topic.name}</option>)}
+          </select>
+        </div>
+      </form>
+
+      <p class="archive-count" data-archive-status aria-live="polite"></p>
+
+      {articles.length > 0 ? (
+        <ol class="listing" data-archive-list>
+          {articles.map((article) => {
+            const topic = categorySlug(article.data.category);
+            const search = [article.data.title, article.data.description, article.data.category, ...article.data.tags].join(' ').toLowerCase();
+            return (
+              <li class="listing-item" data-archive-item data-topic={topic} data-search={search}>
+                <div class="listing-meta">
+                  <time datetime={isoDate(article.data.date)}>{formatDate(article.data.date)}</time>
+                  <br />
+                  <a href={categoryPath(article.data.category)}>{article.data.category}</a>
+                </div>
+                <div>
+                  <h2><a href={articlePath(article)}>{article.data.title}</a></h2>
+                  <p>{article.data.description}</p>
+                  {article.data.readTime && <p class="listing-meta">{article.data.readTime}</p>}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      ) : (
+        <p class="empty-state">No writing has been published yet.</p>
+      )}
+    </section>
+
+    {topics.length > 0 && (
+      <nav class="topic-nav" aria-label="Writing topics">
+        <span>Browse topics:</span>
+        {topics.map((topic) => <a href={categoryPath(topic.name)}>{topic.name}</a>)}
+      </nav>
+    )}
+  </article>
+</BaseLayout>
+
+<script>
+  const form = document.querySelector('[data-archive-form]');
+  const search = document.querySelector('[data-archive-search]');
+  const topic = document.querySelector('[data-archive-topic]');
+  const items = [...document.querySelectorAll<HTMLElement>('[data-archive-item]')];
+  const count = document.querySelector('[data-archive-count]');
+  const status = document.querySelector('[data-archive-status]');
+
+  const updateArchive = () => {
+    const query = search instanceof HTMLInputElement ? search.value.trim().toLowerCase() : '';
+    const selectedTopic = topic instanceof HTMLSelectElement ? topic.value : 'all';
+    let visible = 0;
+    items.forEach((item) => {
+      const matchesQuery = !query || (item.getAttribute('data-search') || '').includes(query);
+      const matchesTopic = selectedTopic === 'all' || item.getAttribute('data-topic') === selectedTopic;
+      const show = matchesQuery && matchesTopic;
+      item.hidden = !show;
+      if (show) visible += 1;
+    });
+    if (count) count.textContent = `${visible} ${visible === 1 ? 'entry' : 'entries'}`;
+    if (status) status.textContent = query || selectedTopic !== 'all' ? `Showing ${visible} of ${items.length} entries.` : '';
+  };
+
+  form?.addEventListener('submit', (event) => event.preventDefault());
+  search?.addEventListener('input', updateArchive);
+  topic?.addEventListener('change', updateArchive);
+</script>

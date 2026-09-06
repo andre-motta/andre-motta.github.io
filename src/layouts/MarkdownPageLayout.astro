@@ -1,0 +1,32 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  frontmatter?: {
+    title?: string;
+    description?: string;
+    intro?: string;
+    kicker?: string;
+  };
+  title?: string;
+  description?: string;
+  intro?: string;
+  kicker?: string;
+}
+
+const props = Astro.props as Props;
+const metadata = props.frontmatter ?? props;
+const title = metadata.title ?? 'Page';
+const description = metadata.description ?? metadata.intro;
+const kicker = metadata.kicker ?? 'ANDRE LUSTOSA';
+---
+<BaseLayout title={title} description={description} canonicalPath={Astro.url.pathname}>
+  <article class="page-shell">
+    <header class="page-header">
+      <p class="eyebrow">{kicker}</p>
+      <h1 class="page-title">{title}</h1>
+      {description && <p class="page-intro">{description}</p>}
+    </header>
+    <div class="prose"><slot /></div>
+  </article>
+</BaseLayout>

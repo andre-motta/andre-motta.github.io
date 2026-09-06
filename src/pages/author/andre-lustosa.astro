@@ -1,0 +1,14 @@
+---
+import profile from '../../data/profile.json';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+<BaseLayout title={profile.name} description={`Writing by ${profile.name}.`} canonicalPath="/author/andre-lustosa.html">
+  <article class="page-shell">
+    <header class="page-header">
+      <p class="eyebrow">ANDRE LUSTOSA / AUTHOR</p>
+      <h1 class="page-title">{profile.name}</h1>
+      <p class="page-intro">{profile.role} at {profile.organization}.</p>
+    </header>
+    <p class="topic-nav"><a href="/archives.html">Browse all writing →</a></p>
+  </article>
+</BaseLayout>

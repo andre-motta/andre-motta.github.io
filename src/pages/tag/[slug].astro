@@ -1,0 +1,38 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { articlePath, formatDate, getArticles, isoDate, slugify, tagPath } from '../../lib/articles';
+
+export async function getStaticPaths() {
+  const articles = await getArticles();
+  const tags = [...new Set(articles.flatMap((article) => article.data.tags))];
+  return tags.map((tag) => ({
+    params: { slug: slugify(tag) },
+    props: { tag, articles: articles.filter((article) => article.data.tags.includes(tag)) },
+  }));
+}
+
+const { tag, articles } = Astro.props;
+---
+<BaseLayout title={`#${tag}`} description={`Writing tagged ${tag} by Andre Lustosa.`} canonicalPath={tagPath(tag)}>
+  <article class="page-shell">
+    <header class="page-header">
+      <p class="eyebrow">ANDRE LUSTOSA / TAG</p>
+      <h1 class="page-title">#{tag}</h1>
+      <p class="page-intro">{articles.length} {articles.length === 1 ? 'entry' : 'entries'} with this tag.</p>
+    </header>
+
+    <ol class="listing">
+      {articles.map((article) => (
+        <li class="listing-item">
+          <div class="listing-meta"><time datetime={isoDate(article.data.date)}>{formatDate(article.data.date)}</time></div>
+          <div>
+            <h2><a href={articlePath(article)}>{article.data.title}</a></h2>
+            <p>{article.data.description}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+
+    <p class="topic-nav"><a href="/archives.html">← All writing</a></p>
+  </article>
+</BaseLayout>

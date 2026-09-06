@@ -1,0 +1,50 @@
+---
+import profile from '../data/profile.json';
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="About" description={profile.intro} canonicalPath="/about.html">
+  <article class="page-shell about-page">
+    <header class="page-header">
+      <p class="eyebrow">ANDRE LUSTOSA / ABOUT</p>
+      <h1 class="page-title">About the work.</h1>
+      <p class="page-intro">{profile.intro}</p>
+    </header>
+
+    <div class="about-layout">
+      <div class="about-content prose">
+        {profile.about.map((paragraph) => <p>{paragraph}</p>)}
+
+        <section class="about-focus" aria-labelledby="about-focus-title">
+          <h2 id="about-focus-title">Focus</h2>
+          <ol class="about-focus-list">
+            {profile.focus.map((item, index) => (
+              <li>
+                <span class="focus-number">{String(index + 1).padStart(2, '0')}</span>
+                <div>
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      </div>
+
+      <aside class="about-aside" aria-label="Profile links">
+        <p class="section-label">Profile</p>
+        <p class="about-identity"><strong>{profile.role}</strong><br />{profile.organization}<br />{profile.location}</p>
+
+        <nav class="about-links" aria-label="About links">
+          <a href="/projects.html">Explore the projects ↗</a>
+          <a href="/cv.html">Read the CV ↗</a>
+          <a href="/extra/Andre_Motta_Resume.pdf">Download the PDF ↗</a>
+          <a href={`mailto:${profile.email}`}>Email Andre ↗</a>
+        </nav>
+
+        <div class="about-links about-external-links">
+          {profile.links.map((link) => <a href={link.url}>{link.label} ↗</a>)}
+        </div>
+      </aside>
+    </div>
+  </article>
+</BaseLayout>

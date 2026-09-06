@@ -1,0 +1,124 @@
+---
+import profile from '../data/profile.json';
+import { absoluteUrl, cleanDescription, FEED_PATH } from '../lib/site';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  canonicalPath?: string;
+  noindex?: boolean;
+}
+
+const {
+  title = profile.name,
+  description = profile.intro,
+  canonicalPath = Astro.url.pathname,
+  noindex = false,
+} = Astro.props;
+const pageTitle = title === profile.name ? title : `${title} | ${profile.name}`;
+const metaDescription = cleanDescription(description, profile.intro);
+const canonical = absoluteUrl(canonicalPath);
+const navigation = [
+  { label: 'Writing', href: '/archives.html' },
+  { label: 'Projects', href: '/projects.html' },
+  { label: 'About', href: '/about.html' },
+  { label: 'CV', href: '/cv.html' },
+];
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content="Astro" />
+    <meta name="description" content={metaDescription} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <title>{pageTitle}</title>
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="application/atom+xml" title={`${profile.name} writing`} href={absoluteUrl(FEED_PATH)} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={metaDescription} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={profile.name} />
+    <slot name="head" />
+    <script is:inline>
+      (() => {
+        try {
+          const saved = localStorage.getItem('theme');
+          if (saved === 'dark' || saved === 'light') {
+            document.documentElement.dataset.theme = saved;
+          }
+        } catch {
+          // Private browsing modes may deny storage. CSS follows the system preference.
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="brand" href="/" aria-label={`${profile.name}, home`}>
+          <span class="brand-mark" aria-hidden="true">AL</span>
+          <span class="brand-name">{profile.name}</span>
+        </a>
+        <div class="header-actions">
+          <nav class="primary-nav" aria-label="Primary navigation">
+            {navigation.map((item) => <a href={item.href} aria-current={Astro.url.pathname === item.href ? 'page' : undefined}>{item.label}</a>)}
+          </nav>
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark mode" aria-pressed="false">
+            <span class="theme-icon" aria-hidden="true">◐</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <div>
+          <p class="footer-kicker">{profile.name}</p>
+          <p class="footer-note">A personal site about software, systems, and the work of making both dependable.</p>
+        </div>
+        <div class="footer-links">
+          {profile.links.map((link) => <a href={link.url}>{link.label}</a>)}
+          <a href={`mailto:${profile.email}`}>Email</a>
+          <a href={FEED_PATH}>RSS</a>
+        </div>
+        <p class="footer-legal">© {new Date().getFullYear()} {profile.name}.</p>
+      </div>
+    </footer>
+
+    <script>
+      const toggle = document.querySelector('[data-theme-toggle]');
+      const root = document.documentElement;
+      const systemTheme = window.matchMedia?.('(prefers-color-scheme: dark)');
+      const currentTheme = () => root.dataset.theme || (systemTheme?.matches ? 'dark' : 'light');
+      const updateToggle = () => {
+        const dark = currentTheme() === 'dark';
+        toggle?.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+        toggle?.setAttribute('aria-pressed', String(dark));
+      };
+      toggle?.addEventListener('click', () => {
+        const dark = currentTheme() === 'dark';
+        const next = dark ? 'light' : 'dark';
+        root.dataset.theme = next;
+        try {
+          localStorage.setItem('theme', next);
+        } catch {
+          // Theme preference is optional when storage is unavailable.
+        }
+        updateToggle();
+      });
+      systemTheme?.addEventListener?.('change', () => {
+        if (!root.dataset.theme) updateToggle();
+      });
+      updateToggle();
+    </script>
+  </body>
+</html>

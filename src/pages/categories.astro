@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { categoryPath, categorySlug, getArticles } from '../lib/articles';
+
+const articles = await getArticles();
+const categories = [...new Set(articles.map((article) => article.data.category))]
+  .sort((a, b) => a.localeCompare(b))
+  .map((name) => ({ name, slug: categorySlug(name), count: articles.filter((article) => article.data.category === name).length }));
+---
+<BaseLayout title="Topics" description="Topics in Andre Lustosa’s writing." canonicalPath="/categories.html">
+  <article class="page-shell">
+    <header class="page-header">
+      <p class="eyebrow">ANDRE LUSTOSA / TOPICS</p>
+      <h1 class="page-title">Browse by topic.</h1>
+    </header>
+    <ol class="listing">
+      {categories.map((category) => (
+        <li class="listing-item">
+          <div class="listing-meta">{String(category.count).padStart(2, '0')}</div>
+          <div><h2><a href={categoryPath(category.name)}>{category.name}</a></h2><p>Writing about {category.name.toLowerCase()}.</p></div>
+        </li>
+      ))}
+    </ol>
+  </article>
+</BaseLayout>

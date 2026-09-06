@@ -1,0 +1,64 @@
+---
+import projects from '../data/projects.json';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const featuredProjects = projects.filter((project) => project.featured);
+const otherProjects = projects.filter((project) => !project.featured);
+---
+<BaseLayout title="Projects" description="Selected open-source and engineering projects by Andre Lustosa." canonicalPath="/projects.html">
+  <article class="page-shell">
+    <header class="page-header">
+      <p class="eyebrow">ANDRE LUSTOSA / PROJECTS</p>
+      <h1 class="page-title">Things made useful.</h1>
+      <p class="page-intro">A selection of open-source tools, packaging work, and infrastructure contributions. Each link points to the project’s public record.</p>
+    </header>
+
+    {featuredProjects.length > 0 && (
+      <section aria-labelledby="featured-projects-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-label">01 / Selected</p>
+            <h2 class="section-title" id="featured-projects-title">Selected projects</h2>
+          </div>
+        </div>
+        <div class="projects-grid">
+          {featuredProjects.map((project, index) => (
+            <article class="project-item">
+              <p class="project-number">{String(index + 1).padStart(2, '0')}</p>
+              <a class="project-name" href={project.url}>{project.name} ↗</a>
+              <p class="project-role">{project.role}</p>
+              <p class="project-description">{project.description}</p>
+              <div class="project-tags" aria-label={`${project.name} topics`}>
+                {project.tags.map((tag) => <span>{tag}</span>)}
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    )}
+
+    {otherProjects.length > 0 && (
+      <section class="section-block" aria-labelledby="other-projects-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-label">02 / More</p>
+            <h2 class="section-title" id="other-projects-title">Other work</h2>
+          </div>
+        </div>
+        <div class="writing-rows">
+          {otherProjects.map((project) => (
+            <article class="writing-row">
+              <div>
+                <a class="writing-title" href={project.url}>{project.name} ↗</a>
+                <p class="row-summary">{project.description}</p>
+              </div>
+              <p class="meta">{project.role}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+    )}
+
+    {projects.length === 0 && <p class="empty-state">Projects will appear here as they are selected for publication.</p>}
+  </article>
+</BaseLayout>

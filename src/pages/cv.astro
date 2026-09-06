@@ -1,0 +1,78 @@
+---
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import profile from '../data/profile.json';
+import CvEntry from '../components/CvEntry.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { assertCvDocument, cvPdfPath, type CvDocument } from '../lib/cv';
+
+const generatedPath = resolve(process.cwd(), '.generated/cv.json');
+if (!existsSync(generatedPath)) {
+  throw new Error('Missing .generated/cv.json. Run the CV importer before building the site.');
+}
+const cv: CvDocument = assertCvDocument(JSON.parse(readFileSync(generatedPath, 'utf-8')));
+---
+<BaseLayout title="CV" description={`The public CV of ${profile.name}.`} canonicalPath="/cv.html">
+  <article class="page-shell">
+    <header class="page-header">
+      <p class="eyebrow">ANDRE LUSTOSA / CV</p>
+      <h1 class="page-title">A record of the work.</h1>
+      <p class="page-intro">Principal Software Engineer and Team Lead at {profile.organization}, working across reliable platforms, accelerator ecosystems, and engineering leadership.</p>
+    </header>
+
+    <div class="cv-layout">
+      <div class="cv-content">
+        <div class="cv-sections">
+            <section class="cv-section" aria-labelledby="cv-summary-title">
+              <h2 class="cv-section-title" id="cv-summary-title">Summary</h2>
+              <p class="cv-summary">{cv.summary}</p>
+              {cv.summaryHighlights && <ul class="cv-entry-list">{cv.summaryHighlights.map((item) => <li>{item}</li>)}</ul>}
+            </section>
+
+            <section class="cv-section" aria-labelledby="cv-expertise-title">
+              <h2 class="cv-section-title" id="cv-expertise-title">Areas of expertise</h2>
+              <div class="cv-tags">{cv.expertise.map((item) => <span>{item}</span>)}</div>
+            </section>
+
+            <section class="cv-section" aria-labelledby="cv-experience-title">
+              <h2 class="cv-section-title" id="cv-experience-title">Experience</h2>
+              {cv.experience.map((entry) => <CvEntry entry={entry} />)}
+            </section>
+
+            <section class="cv-section" aria-labelledby="cv-education-title">
+              <h2 class="cv-section-title" id="cv-education-title">Education</h2>
+              {cv.education.map((entry) => (
+                <article class="cv-entry">
+                  <div class="cv-entry-head"><h3 class="cv-entry-name">{entry.degree}</h3><span class="cv-entry-period">{entry.period}</span></div>
+                  <p class="cv-entry-role">{entry.institution}</p>
+                  {entry.details.length > 0 && <ul class="cv-entry-list">{entry.details.map((detail) => <li>{detail}</li>)}</ul>}
+                </article>
+              ))}
+            </section>
+
+            <section class="cv-section" aria-labelledby="cv-additional-title">
+              <h2 class="cv-section-title" id="cv-additional-title">Additional experience</h2>
+              {cv.additionalExperience.map((entry) => <CvEntry entry={entry} />)}
+            </section>
+
+            <section class="cv-section" aria-labelledby="cv-research-title">
+              <h2 class="cv-section-title" id="cv-research-title">Research experience</h2>
+              {cv.research.map((entry) => <CvEntry entry={entry} />)}
+            </section>
+
+            <section class="cv-section" aria-labelledby="cv-skills-title">
+              <h2 class="cv-section-title" id="cv-skills-title">Skills</h2>
+              <dl class="cv-skills">
+                {cv.skills.map((group) => <div class="cv-skill-row"><dt>{group.category}</dt><dd>{group.items.join(', ')}</dd></div>)}
+              </dl>
+            </section>
+        </div>
+      </div>
+
+      <aside class="cv-actions" aria-label="CV actions">
+        <a class="download-link" href={cvPdfPath}>Download PDF ↗</a>
+        <p class="cv-updated">Download a copy to read or share.</p>
+      </aside>
+    </div>
+  </article>
+</BaseLayout>

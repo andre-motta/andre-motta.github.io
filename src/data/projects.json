@@ -1,0 +1,133 @@
+[
+  {
+    "name": "tongs",
+    "role": "Creator",
+    "description": "A terminal-native code review inbox for GitHub and GitLab. Review diffs, follow discussions, and investigate CI without losing your place.",
+    "url": "https://github.com/andre-motta/tongs",
+    "tags": [
+      "Developer tools",
+      "Python",
+      "Code review"
+    ],
+    "featured": true
+  },
+  {
+    "name": "Fromager",
+    "role": "Contributor & reviewer",
+    "description": "Build Python dependency trees from source, with explicit support for prebuilt artifacts. My work covers version-specific build policy and build-failure diagnostics.",
+    "url": "https://github.com/python-wheel-build/fromager",
+    "tags": [
+      "Python packaging",
+      "Build systems"
+    ],
+    "featured": false
+  },
+  {
+    "name": "agentic-ci",
+    "role": "Maintainer",
+    "description": "Run coding agents in sandboxed CI environments. My contributions span forge APIs, telemetry, runtime integration, and versioning.",
+    "url": "https://github.com/opendatahub-io/agentic-ci",
+    "tags": [
+      "Agentic systems",
+      "CI/CD",
+      "Observability"
+    ],
+    "featured": true
+  },
+  {
+    "name": "OpenShell midstream",
+    "role": "Midstream Maintainer",
+    "description": "Red Hat's maintained midstream of NVIDIA OpenShell for secure downstream builds. My work spans packaging and release automation, alongside a separate fix proposed to NVIDIA's upstream project.",
+    "url": "https://github.com/opendatahub-io/openshell",
+    "tags": [
+      "Sandboxing",
+      "Packaging",
+      "Open source"
+    ],
+    "featured": true
+  },
+  {
+    "name": "Claude Fleet Monitor",
+    "role": "Creator",
+    "description": "A terminal dashboard for monitoring Claude Code and Codex sessions, following their status, and returning to the terminal that needs attention.",
+    "url": "https://github.com/andre-motta/claude-fleet-monitor",
+    "tags": [
+      "Developer tools",
+      "Python",
+      "Agent workflows"
+    ],
+    "featured": false
+  },
+  {
+    "name": "loa-logs",
+    "role": "Upstream contributor",
+    "description": "Linux installation and update support, followed by fixes for launcher cleanup races, fallback behavior, and log retention.",
+    "url": "https://github.com/snoww/loa-logs",
+    "tags": [
+      "Linux",
+      "Cross-platform",
+      "Reliability"
+    ],
+    "featured": false
+  },
+  {
+    "name": "python-package-skills",
+    "role": "Contributor & reviewer",
+    "description": "Agent skills for Python package investigation, onboarding, security, and licensing. I contributed the initial framework and focused skills, and review changes to the collection.",
+    "url": "https://github.com/opendatahub-io/python-package-skills",
+    "tags": [
+      "Agents",
+      "Python packaging",
+      "Developer tools"
+    ],
+    "featured": false
+  },
+  {
+    "name": "ROCm aiter",
+    "role": "Upstream contributor",
+    "description": "AMD’s AI Tensor Engine for ROCm. My merged changes fixed a missing build input for prebuilt kernels and made the build respect explicit job limits.",
+    "url": "https://github.com/ROCm/aiter",
+    "tags": [
+      "ROCm",
+      "Accelerators",
+      "Build systems"
+    ],
+    "featured": false
+  },
+  {
+    "name": "TorchCodec",
+    "role": "Upstream contributor",
+    "description": "PyTorch media decoding and encoding. I fixed a signature mismatch in the AVIF-disabled build path that caused an undefined symbol at import; the change was merged upstream.",
+    "url": "https://github.com/meta-pytorch/torchcodec",
+    "tags": [
+      "PyTorch",
+      "Native extensions",
+      "Compatibility"
+    ],
+    "featured": false
+  },
+  {
+    "name": "CUDA Python",
+    "role": "Contributor · open proposal",
+    "description": "NVIDIA’s Python interfaces for CUDA. I diagnosed a source-build compatibility problem across CUDA Bindings 13.0 and 13.1 and proposed version-aware compile guards. The proposal remains open as of September 6, 2026.",
+    "url": "https://github.com/NVIDIA/cuda-python/pull/2700",
+    "tags": [
+      "CUDA",
+      "Python",
+      "Compatibility"
+    ],
+    "featured": false
+  },
+  {
+    "name": "pretty-yaml",
+    "role": "Upstream contributor",
+    "description": "Readable YAML serialization built on PyYAML. My merged change made the test suite work against installed artifacts as well as the source checkout.",
+    "url": "https://github.com/mk-fg/pretty-yaml",
+    "tags": [
+      "Python",
+      "Testing",
+      "Packaging"
+    ],
+    "featured": false
+  }
+]

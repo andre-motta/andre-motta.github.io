@@ -1,0 +1,20 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getArticles, tagPath } from '../lib/articles';
+
+const articles = await getArticles();
+const tags = [...new Set(articles.flatMap((article) => article.data.tags))]
+  .sort((a, b) => a.localeCompare(b))
+  .map((name) => ({ name, count: articles.filter((article) => article.data.tags.includes(name)).length }));
+---
+<BaseLayout title="Tags" description="Tags used across Andre Lustosa’s writing." canonicalPath="/tags.html">
+  <article class="page-shell">
+    <header class="page-header">
+      <p class="eyebrow">ANDRE LUSTOSA / TAGS</p>
+      <h1 class="page-title">Browse by tag.</h1>
+    </header>
+    <div class="topic-nav">
+      {tags.map((tag) => <a href={tagPath(tag.name)}>#{tag.name} <span class="listing-meta">({tag.count})</span></a>)}
+    </div>
+  </article>
+</BaseLayout>
