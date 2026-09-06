@@ -2,6 +2,8 @@
 import profile from '../data/profile.json';
 import Analytics from '../components/Analytics.astro';
 import { absoluteUrl, cleanDescription, FEED_PATH } from '../lib/site';
+import { lecture } from '../data/lecture';
+import { isLectureAvailable } from '../lib/lectures';
 import '../styles/global.css';
 
 interface Props {
@@ -9,6 +11,7 @@ interface Props {
   description?: string;
   canonicalPath?: string;
   noindex?: boolean;
+  chrome?: 'default' | 'presenter';
 }
 
 const {
@@ -16,12 +19,14 @@ const {
   description = profile.intro,
   canonicalPath = Astro.url.pathname,
   noindex = false,
+  chrome = 'default',
 } = Astro.props;
 const pageTitle = title === profile.name ? title : `${title} | ${profile.name}`;
 const metaDescription = cleanDescription(description, profile.intro);
 const canonical = absoluteUrl(canonicalPath);
 const navigation = [
   { label: 'Writing', href: '/archives.html' },
+  ...(isLectureAvailable(lecture) ? [{ label: 'Talks', href: '/talks.html' }] : []),
   { label: 'Projects', href: '/projects.html' },
   { label: 'About', href: '/about.html' },
   { label: 'CV', href: '/cv.html' },
@@ -61,42 +66,46 @@ const navigation = [
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
-    <header class="site-header">
-      <div class="shell header-inner">
-        <a class="brand" href="/" aria-label={`${profile.name}, home`}>
-          <span class="brand-mark" aria-hidden="true">AL</span>
-          <span class="brand-name">{profile.name}</span>
-        </a>
-        <div class="header-actions">
-          <nav class="primary-nav" aria-label="Primary navigation">
-            {navigation.map((item) => <a href={item.href} aria-current={Astro.url.pathname === item.href ? 'page' : undefined}>{item.label}</a>)}
-          </nav>
-          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark mode" aria-pressed="false">
-            <span class="theme-icon" aria-hidden="true">◐</span>
-          </button>
+    {chrome === 'default' && (
+      <header class="site-header">
+        <div class="shell header-inner">
+          <a class="brand" href="/" aria-label={`${profile.name}, home`}>
+            <span class="brand-mark" aria-hidden="true">AL</span>
+            <span class="brand-name">{profile.name}</span>
+          </a>
+          <div class="header-actions">
+            <nav class="primary-nav" aria-label="Primary navigation">
+              {navigation.map((item) => <a href={item.href} aria-current={Astro.url.pathname === item.href ? 'page' : undefined}>{item.label}</a>)}
+            </nav>
+            <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark mode" aria-pressed="false">
+              <span class="theme-icon" aria-hidden="true">◐</span>
+            </button>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+    )}
 
     <main id="main-content">
       <slot />
     </main>
 
-    <footer class="site-footer">
-      <div class="shell footer-inner">
-        <div>
-          <p class="footer-kicker">{profile.name}</p>
-          <p class="footer-note">A personal site about software, systems, and the work of making both dependable.</p>
+    {chrome === 'default' && (
+      <footer class="site-footer">
+        <div class="shell footer-inner">
+          <div>
+            <p class="footer-kicker">{profile.name}</p>
+            <p class="footer-note">A personal site about software, systems, and the work of making both dependable.</p>
+          </div>
+          <div class="footer-links">
+            {profile.links.map((link) => <a href={link.url}>{link.label}</a>)}
+            <a href={`mailto:${profile.email}`}>Email</a>
+            <a href={FEED_PATH}>RSS</a>
+            <a href="/privacy.html">Privacy</a>
+          </div>
+          <p class="footer-legal">© {new Date().getFullYear()} {profile.name}.</p>
         </div>
-        <div class="footer-links">
-          {profile.links.map((link) => <a href={link.url}>{link.label}</a>)}
-          <a href={`mailto:${profile.email}`}>Email</a>
-          <a href={FEED_PATH}>RSS</a>
-          <a href="/privacy.html">Privacy</a>
-        </div>
-        <p class="footer-legal">© {new Date().getFullYear()} {profile.name}.</p>
-      </div>
-    </footer>
+      </footer>
+    )}
 
     <script>
       const toggle = document.querySelector('[data-theme-toggle]');

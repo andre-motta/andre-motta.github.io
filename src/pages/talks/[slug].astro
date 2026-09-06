@@ -1,0 +1,205 @@
+---
+import LectureLayout from '../../layouts/LectureLayout.astro';
+import { lecture } from '../../data/lecture';
+import { isLectureAvailable, lectureRoute } from '../../lib/lectures';
+
+export function getStaticPaths() {
+  if (!isLectureAvailable(lecture)) return [];
+  return [{ params: { slug: lecture.slug }, props: { lecture } }];
+}
+
+const { lecture: currentLecture } = Astro.props;
+---
+
+<LectureLayout lecture={currentLecture} variant="chooser" description={`${currentLecture.title}: ${currentLecture.subtitle}. Choose the original Red Hat deck or the companion article.`}>
+  <article class="lecture-chooser" aria-labelledby="lecture-title">
+    <header class="chooser-header">
+      <p class="section-label">{currentLecture.event} · {currentLecture.date}</p>
+      <h1 id="lecture-title">{currentLecture.title}</h1>
+      <p class="chooser-subtitle">{currentLecture.subtitle}</p>
+      <p class="chooser-byline">{currentLecture.author}</p>
+    </header>
+
+    <section class="chooser-options" aria-labelledby="options-title">
+      <div class="chooser-section-heading">
+        <p class="section-label">Two ways to follow the lecture</p>
+        <h2 id="options-title">Slides and companion article.</h2>
+      </div>
+      <div class="option-grid">
+        <a class="option-card option-card-primary" href={lectureRoute(currentLecture, 'original')}>
+          <span class="option-number">01</span>
+          <span class="option-title">Original Red Hat deck</span>
+          <span class="option-description">The original Red Hat presentation, preserved with its original layout, colors, and branding. Includes a slide viewer and a PDF download.</span>
+          <span class="option-link">Open original slides <span aria-hidden="true">→</span></span>
+        </a>
+        <a class="option-card" href={currentLecture.articlePath}>
+          <span class="option-number">02</span>
+          <span class="option-title">In-depth companion article</span>
+          <span class="option-description">An in-depth companion article that develops the lecture’s ideas in more detail, with room for context, tradeoffs, and references.</span>
+          <span class="option-link">Read the article <span aria-hidden="true">→</span></span>
+        </a>
+      </div>
+      <p class="chooser-compare"><a href={lectureRoute(currentLecture, 'web')}>Compare website-styled HTML slides <span aria-hidden="true">→</span></a></p>
+    </section>
+
+    <aside class="chooser-meta">
+      <p><strong>Primary presentation:</strong> The original deck is the reference for the lecture.</p>
+      <p><a href={currentLecture.articlePath}>Read the companion article</a></p>
+    </aside>
+  </article>
+</LectureLayout>
+
+<style>
+  .lecture-chooser {
+    padding-block: clamp(4.5rem, 10vw, 9rem) 1rem;
+  }
+
+  .chooser-header {
+    max-width: 58rem;
+  }
+
+  .chooser-header h1 {
+    max-width: 12ch;
+    margin: 0.5rem 0 0.75rem;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(4rem, 11vw, 8.8rem);
+    font-weight: 400;
+    letter-spacing: -0.08em;
+    line-height: 0.86;
+  }
+
+  .chooser-subtitle {
+    max-width: 38rem;
+    margin: 0;
+    color: var(--muted);
+    font-size: clamp(1.15rem, 2vw, 1.45rem);
+  }
+
+  .chooser-byline {
+    margin: 1.5rem 0 0;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  .chooser-options {
+    margin-top: clamp(5rem, 11vw, 9rem);
+  }
+
+  .chooser-section-heading {
+    display: grid;
+    grid-template-columns: minmax(12rem, 0.7fr) minmax(0, 1.3fr);
+    gap: 2rem;
+    align-items: end;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .chooser-section-heading p {
+    margin: 0;
+  }
+
+  .chooser-section-heading h2 {
+    max-width: 26ch;
+    margin: 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(1.65rem, 3vw, 2.35rem);
+    font-weight: 400;
+    letter-spacing: -0.035em;
+    line-height: 1.08;
+  }
+
+  .option-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .option-card {
+    display: flex;
+    min-height: 18rem;
+    flex-direction: column;
+    padding: clamp(1.35rem, 3vw, 2.35rem);
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .option-card:hover {
+    border-color: var(--text);
+    color: var(--text);
+  }
+
+  .option-card-primary {
+    border-color: var(--accent);
+  }
+
+  .option-number {
+    color: var(--accent);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+  }
+
+  .option-title {
+    margin-top: 3.2rem;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+    letter-spacing: -0.045em;
+    line-height: 1;
+  }
+
+  .option-description {
+    max-width: 45ch;
+    margin-top: 1rem;
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.5;
+  }
+
+  .option-link {
+    margin-top: auto;
+    padding-top: 2rem;
+    font-size: 0.88rem;
+    font-weight: 650;
+  }
+
+  .chooser-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 2rem;
+    margin-top: 2.25rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .chooser-meta p {
+    margin: 0;
+  }
+
+  .chooser-compare {
+    margin: 1.25rem 0 0;
+    font-size: 0.9rem;
+  }
+
+  .chooser-meta strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .meta-note {
+    color: var(--faint);
+  }
+
+  @media (max-width: 700px) {
+    .chooser-section-heading,
+    .option-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .option-card {
+      min-height: 15rem;
+    }
+  }
+</style>

@@ -1,0 +1,23 @@
+---
+import LectureViewer from '../../../components/LectureViewer.astro';
+import LectureLayout from '../../../layouts/LectureLayout.astro';
+import { lecture } from '../../../data/lecture';
+import { isLectureAvailable, lectureSlideCount, readLectureTranscript, requireLectureAsset } from '../../../lib/lectures';
+
+export async function getStaticPaths() {
+  if (!isLectureAvailable(lecture)) return [];
+  return [{ params: { slug: lecture.slug }, props: { lecture } }];
+}
+
+const { lecture: currentLecture } = Astro.props;
+const total = lectureSlideCount(currentLecture);
+for (let number = 1; number <= total; number += 1) {
+  requireLectureAsset(currentLecture, `slide-${String(number).padStart(2, '0')}.png`, 'slide image');
+}
+requireLectureAsset(currentLecture, 'original.pdf', 'PDF');
+const transcript = await readLectureTranscript(currentLecture);
+---
+
+<LectureLayout lecture={currentLecture} variant="original" description={`${currentLecture.title}, original Red Hat presentation. ${currentLecture.event}, ${currentLecture.date}.`}>
+  <LectureViewer lecture={currentLecture} transcript={transcript} />
+</LectureLayout>

@@ -1,0 +1,398 @@
+[
+  {
+    "number": 1,
+    "title": "AI Agents in CI/CD:",
+    "minutes": 0.75,
+    "main_point": "The lecture studies delegated authority: models propose actions, while the surrounding system decides what may happen.",
+    "cues": [
+      "Open with your name and role, then frame the problem as delegated authority.",
+      "A model proposes; the workflow grants authority and checks evidence.",
+      "Name the arc: foundations, security boundaries, robustness, measurement, and research questions.",
+      "Ask students to separate proved properties, measured observations, and design recommendations."
+    ],
+    "qualification": "Operational limits bound attempts; useful completion and effect safety require separate evidence.",
+    "transition": "Here is the route from foundations to the evidence needed to operate these systems.",
+    "article_section": {
+      "title": "Start with the agent loop",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#start-with-the-agent-loop"
+    }
+  },
+  {
+    "number": 2,
+    "title": "Lecture Outline",
+    "minutes": 1,
+    "main_point": "Each section adds one obligation needed before a probabilistic worker can safely participate in CI/CD.",
+    "cues": [
+      "Foundations identify the principal, deputy, delegated objective, and authority.",
+      "Security asks what can be enforced when content and model output remain untrusted.",
+      "Robustness examines retries, feedback, state, and ambiguous external effects.",
+      "Measurement asks whether accepted work improves outcomes after review, failure, and downstream cost."
+    ],
+    "qualification": "Keep three questions active: what is constrained, which assumptions support it, and what evidence could falsify the claim?",
+    "transition": "Begin with a trace of observation, proposed action, tool result, and repetition.",
+    "article_section": {
+      "title": "Specify the system before claiming a guarantee",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#specify-the-system-before-claiming-a-guarantee"
+    }
+  },
+  {
+    "number": 3,
+    "title": "Agent Architecture: From Theory to Tool-Use LLMs",
+    "minutes": 3,
+    "main_point": "Assurance starts by separating what the model proposes from what the environment actually executes.",
+    "cues": [
+      "Represent a run as observations, requested actions, tool results, and updated state.",
+      "Use the Universal Turing Machine comparison only as an analogy for unrestricted general computation.",
+      "A finite attempt budget proves at most that the counted attempts cannot exceed the bound.",
+      "Add wall-clock cancellation and explicit terminal states: accepted, failed, exhausted, or handed off."
+    ],
+    "qualification": "Turing's result limits a general decider for arbitrary programs; it does not forbid checking a bounded workflow or stopping a particular run.",
+    "transition": "Once the model can request effects, ask whose authority it exercises.",
+    "article_section": {
+      "title": "Specify the system before claiming a guarantee",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#specify-the-system-before-claiming-a-guarantee"
+    }
+  },
+  {
+    "number": 4,
+    "title": "The “Principal-Agent” Problem in AI Automation",
+    "minutes": 2,
+    "main_point": "Delegation quality depends on both the task class and the workflow that monitors and limits it.",
+    "cues": [
+      "Name the organization as principal and the tool-using model as delegated worker.",
+      "Incomplete observability raises review cost because the final diff hides much intermediate reasoning.",
+      "Estimate success probability, verification effort, consequence, and reversibility by task class.",
+      "Treat prompts, schemas, gates, and telemetry as different behavior-shaping or monitoring mechanisms."
+    ],
+    "qualification": "The economic language is an analogy: an LLM has no contractual incentives or personal exposure to downstream costs.",
+    "transition": "The confused deputy gives a more precise account of authority misuse.",
+    "article_section": {
+      "title": "Treat tool use as delegated authority",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#treat-tool-use-as-delegated-authority"
+    }
+  },
+  {
+    "number": 5,
+    "title": "The Confused Deputy Revisited",
+    "minutes": 2.5,
+    "main_point": "Hardy (1988): a caller used the compiler’s extra permissions to overwrite a billing file they could not write themselves.",
+    "cues": [
+      "Setup: the compiler recorded usage statistics in (SYSX)STAT, so it had write access across SYSX.",
+      "Redirection: the caller named (SYSX)BILL as debugging output. The compiler overwrote billing data using its own authority.",
+      "Confusion: the caller chose the destination; the compiler supplied unrelated privileges. It mixed two sources of authority.",
+      "Capability fix: use a dedicated STAT capability and a caller-provided output capability, each naming its authorized file."
+    ],
+    "qualification": "AI parallel: untrusted issue text chooses a target while the agent’s broad credential supplies authority.",
+    "transition": "Prompt injection is one route by which untrusted content can misdirect the deputy.",
+    "article_section": {
+      "title": "Treat tool use as delegated authority",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#treat-tool-use-as-delegated-authority"
+    }
+  },
+  {
+    "number": 6,
+    "title": "Injection Attack Taxonomy: Why Prompt Injection is Different",
+    "minutes": 3.5,
+    "main_point": "Prompt injection is an integrity problem at the language layer and an authority problem when interpreted text can cause effects.",
+    "cues": [
+      "SQL parameters, context-aware web encoding, and shell avoidance each protect a defined syntactic boundary.",
+      "Current agents often process policy, user intent, retrieved text, and tool output through one language mechanism.",
+      "AgentDojo version 3 spans 97 user tasks and 629 eligible task-goal pairs, measuring utility with attack success.",
+      "CaMeL evaluates 949 expanded attacks using separated planning, quarantined processing, capabilities, and data-flow policy."
+    ],
+    "qualification": "Benchmark resistance is distribution-specific; effect guarantees remain conditional on correct policy, annotations, mediation, and trusted components.",
+    "transition": "Make those conditions visible by drawing identity, provenance, authority, and lifecycle boundaries.",
+    "article_section": {
+      "title": "State the threat model before reporting a rate",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#state-the-threat-model-before-reporting-a-rate"
+    }
+  },
+  {
+    "number": 7,
+    "title": "Trust Boundary Analysis",
+    "minutes": 2.5,
+    "main_point": "Identity, content provenance, authority, and evidence lifetime answer different trust questions and must remain separate.",
+    "cues": [
+      "A verified maintainer can paste hostile external text; identity does not sanitize content.",
+      "Treat ticket bodies, repository files, logs, and model output as evidence with provenance.",
+      "Grant only the effects required for the named repository, branch, task, and time window.",
+      "Recheck eligibility and bind approval to the exact candidate revision before execution."
+    ],
+    "qualification": "Email-domain or changelog checks are meaningful only when the tracker supplies authenticated canonical identity and controlled audit semantics.",
+    "transition": "Place explicit gates before execution and again before an artifact is accepted.",
+    "article_section": {
+      "title": "Treat tool use as delegated authority",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#treat-tool-use-as-delegated-authority"
+    }
+  },
+  {
+    "number": 8,
+    "title": "Case Study: Defense in Depth in Production",
+    "minutes": 2.5,
+    "main_point": "A gate should expose a versioned predicate, verdict, evidence record, and accountable owner at a named boundary.",
+    "cues": [
+      "Pre-gates control admission and quarantine content before the model receives a task.",
+      "Post-gates bind sensitive-path, secret, identity, and ticket checks to the candidate artifact.",
+      "Several veto gates compose as conjunction for acceptance, without implying independent errors or complete coverage.",
+      "Detectors lower risk for configured patterns; quarantine and review limit consequences after uncertain verdicts."
+    ],
+    "qualification": "Several gates can share a blind spot. A secret scanner is a detector, not proof of absence.",
+    "transition": "Gates inspect named predicates; runtime containment limits which resources the worker can reach.",
+    "article_section": {
+      "title": "Build several enforcement boundaries",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#build-several-enforcement-boundaries"
+    }
+  },
+  {
+    "number": 9,
+    "title": "Containment Primitives: Kernel-Level Enforcement",
+    "minutes": 3,
+    "main_point": "Containment is a composition of controls, each mediating a specific operation under deployment assumptions.",
+    "cues": [
+      "Landlock restricts ambient filesystem rights, with behavior dependent on kernel support, ABI, and handled operations.",
+      "Seccomp filters system calls and selected arguments, reducing kernel surface within a larger isolation design.",
+      "Network namespaces force traffic through a path where destination and application policy can be applied.",
+      "Test complete mediation, tamper resistance, alternate helpers, and failure behavior for the deployed composition."
+    ],
+    "qualification": "Kernel placement alone proves neither complete mediation nor overall sandbox security; allowed channels and configuration remain part of authority.",
+    "transition": "OpenShell shows one concrete composition and the limits of turning product behavior into a security claim.",
+    "article_section": {
+      "title": "Build several enforcement boundaries",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#build-several-enforcement-boundaries"
+    }
+  },
+  {
+    "number": 10,
+    "title": "Case Study: Sandboxing in Production",
+    "minutes": 2,
+    "main_point": "OpenShell combines job isolation, filesystem controls, network policy, and credential routing, but each property is version-specific.",
+    "cues": [
+      "Public Agentic CI documentation supports an embedded gateway, Landlock controls, and endpoint policy.",
+      "Current OpenShell documentation describes network namespaces, a policy proxy, seccomp, and privilege dropping.",
+      "Credential handling differs by class: routed inference can retain provider keys at the host-side gateway.",
+      "A denied CONNECT currently returns a structured 403, so do not narrate every denial as a silent drop."
+    ],
+    "qualification": "Allowed destinations still permit misuse. Neither a silent drop nor a proxy denial rules out side channels.",
+    "transition": "Containment can deny an operation, but it cannot decide every semantic property of generated code.",
+    "article_section": {
+      "title": "Build several enforcement boundaries",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#build-several-enforcement-boundaries"
+    }
+  },
+  {
+    "number": 11,
+    "title": "The Oracle Problem: Limits of Output Verification",
+    "minutes": 3.5,
+    "main_point": "Verification claims become useful only after defining the property, observation surface, enforcement power, and assumptions.",
+    "cues": [
+      "Rice concerns nontrivial extensional properties of arbitrary programs in a Turing-complete model.",
+      "Syntactic checks, types, bounded executions, finite models, and restricted contracts can remain decidable.",
+      "Safety violations have finite bad prefixes that a sufficiently powerful monitor may suppress before execution.",
+      "Liveness, such as eventually producing an acceptable patch, cannot generally be forced by stopping bad actions."
+    ],
+    "qualification": "A bounded model check proves only the modeled property under a justified bound or completeness argument; real-system conformance remains separate.",
+    "transition": "Retry behavior tests these boundaries because the same logical operation may be attempted again.",
+    "article_section": {
+      "title": "Give acceptance authority to evidence",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#give-acceptance-authority-to-evidence"
+    }
+  },
+  {
+    "number": 12,
+    "title": "Non-Determinism in Agentic Systems",
+    "minutes": 2.5,
+    "main_point": "Safe retry requires knowledge about the external effect, not confidence that a second sample will be better.",
+    "cues": [
+      "CI already varies through clocks, networks, concurrency, mutable dependencies, and worker environments.",
+      "Agentic CI adds variation in diagnosis and patch selection; temperature zero is not a universal reproducibility guarantee.",
+      "Separate repeatable predicates, idempotent logical operations, and retries known safe after partial failure.",
+      "Use stable operation keys and bind evidence to source, candidate, tool, and policy versions."
+    ],
+    "qualification": "A JSON schema validates shape, not truth, authorization, current state, or whether an external effect already occurred.",
+    "transition": "When retries consume their own results, the workflow becomes a feedback system.",
+    "article_section": {
+      "title": "Recover effects using evidence, not the model’s recollection",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#recover-effects-using-evidence-not-the-models-recollection"
+    }
+  },
+  {
+    "number": 13,
+    "title": "Convergence and Divergence in Feedback Loops",
+    "minutes": 2.5,
+    "main_point": "Terminality, bounded attempts, convergence, and semantic improvement are four different properties.",
+    "cues": [
+      "A fixed point requires an explicit transition function whose next state equals the current state.",
+      "Passing tests and approval define acceptance, but rerunning a stochastic agent may still change the patch.",
+      "A decreasing retry counter proves bounded attempts, not decreasing semantic error or useful completion.",
+      "Persist accepted, rejected, failed, exhausted, needs-human, and unknown states outside model prose."
+    ],
+    "qualification": "Runtime shielding is correct only relative to its temporal specification, environment abstraction, available safe action, and mediated actuator set.",
+    "transition": "A self-healing cycle shows why one local exclusion rule is useful but does not prove global acyclicity.",
+    "article_section": {
+      "title": "Prove a bound on attempts, then examine what it leaves open",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#prove-a-bound-on-attempts-then-examine-what-it-leaves-open"
+    }
+  },
+  {
+    "number": 14,
+    "title": "Case Study: Cycle Detection in Self-Healing CI",
+    "minutes": 2,
+    "main_point": "Cycle prevention requires an invariant over every trigger edge, not confidence in one label name.",
+    "cues": [
+      "An analyzer can create work selected by a fixer, whose failure creates new analyzer input.",
+      "Applying an exclusion label at creation removes one selection edge under the current admission rule.",
+      "Protect origin lineage, restrict who can change it, and recheck the predicate when the action commits.",
+      "A DAG proof needs the complete graph and a rank that strictly increases along every transition."
+    ],
+    "qualification": "One exclusion rule removes one path; every alternate trigger and lineage reset must respect the invariant.",
+    "transition": "Instructions can influence a proposed edge, while policy must remove disallowed edges from execution.",
+    "article_section": {
+      "title": "Turn the agent loop into a bounded workflow",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#turn-the-agent-loop-into-a-bounded-workflow"
+    }
+  },
+  {
+    "number": 15,
+    "title": "Action Space Reduction via Skills",
+    "minutes": 2,
+    "main_point": "Skills structure model behavior, while independent runtime controls determine the executable action and effect space.",
+    "cues": [
+      "A skill names procedure, inputs, output fields, stopping rules, and expected evidence.",
+      "It can concentrate model proposals without removing a tool call that the runtime still permits.",
+      "Separate possible proposals, exposed tools, state-dependent policy, and provider effects reachable through all paths.",
+      "Validate referenced objects, revisions, evidence, and policy before mapping a structured verdict to authority."
+    ],
+    "qualification": "The type-system analogy applies only when declarations are independently checked and invalid transitions are refused.",
+    "transition": "The same distinction between apparent structure and accepted effect determines what productivity metrics mean.",
+    "article_section": {
+      "title": "Turn the agent loop into a bounded workflow",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#turn-the-agent-loop-into-a-bounded-workflow"
+    }
+  },
+  {
+    "number": 16,
+    "title": "Measuring AI Agent Productivity",
+    "minutes": 3,
+    "main_point": "Evaluate the complete assisted workflow against a defined counterfactual, including failure and human effort.",
+    "cues": [
+      "Register eligible tasks before assignment; retain accepted, revised, rejected, abandoned, blocked, and unresolved outcomes.",
+      "Randomize when feasible; matching alone leaves task choice, familiarity, maturity, and urgency as possible confounders.",
+      "Sum model, CI, diagnosis, review, rework, and downstream costs across every attempt exactly once.",
+      "Divide cohort cost by accepted outcomes, while reporting human hours and the terminal-outcome distribution separately."
+    ],
+    "qualification": "METR's 2025 result and randomized 2026 follow-up concern narrow study populations; selection and measurement changes limit transfer to current CI workflows.",
+    "transition": "Review time is both a cost and a behavior that automation can change.",
+    "article_section": {
+      "title": "Estimate productivity with an explicit counterfactual",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#estimate-productivity-with-an-explicit-counterfactual"
+    }
+  },
+  {
+    "number": 17,
+    "title": "Automation Bias and Over-Reliance",
+    "minutes": 2.5,
+    "main_point": "Human review quality is an empirical outcome shaped by information order, workload, verification cost, and trust in automation.",
+    "cues": [
+      "Separate omission errors after missing warnings from commission errors that follow incorrect advice.",
+      "Give reviewers the diff, bound revisions, commands, policy evidence, and unresolved gaps before a verdict.",
+      "Test whether showing the model verdict before independent assessment changes detection or confidence calibration.",
+      "Evaluate alert suppression through precision, recall, review time, and consequential defect detection."
+    ],
+    "qualification": "Existing automation-bias literature motivates a CI hypothesis; it does not prove that better agents necessarily cause worse code review.",
+    "transition": "This turns human involvement into an authority and information-flow design rather than a slogan.",
+    "article_section": {
+      "title": "Give acceptance authority to evidence",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#give-acceptance-authority-to-evidence"
+    }
+  },
+  {
+    "number": 18,
+    "title": "Human-in-the-Loop as Supervisory Control",
+    "minutes": 2.5,
+    "main_point": "Supervisory control is useful when consequence and semantic uncertainty exceed what automated evidence can justify.",
+    "cues": [
+      "Map repository and pipeline to plant, checks to sensors, agent to controller, and tool APIs to actuators.",
+      "A supervisor may switch from the advanced controller to denial, staging, rollback preparation, or handoff.",
+      "Approval becomes a hard gate only when bound to the exact head and unavoidable by the agent.",
+      "Ask whether state, sensors, transition model, and safe fallback are faithful enough for the claimed envelope."
+    ],
+    "qualification": "Stochasticity does not prove that no Lyapunov function exists, and theory does not require a human for every low-consequence action.",
+    "transition": "Production observations should now be read as evidence under exposure, not as proof of the controls.",
+    "article_section": {
+      "title": "Supervisory control requires a specified model",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#supervisory-control-requires-a-specified-model"
+    }
+  },
+  {
+    "number": 19,
+    "title": "Production Evidence at Scale",
+    "minutes": 1.25,
+    "main_point": "Operational counts establish activity and exposure, while causal benefit and safety require denominators, definitions, and detection coverage.",
+    "cues": [
+      "100+ MRs per week: activity volume; acceptance, rework, and value need their own evidence.",
+      "7 workflows, 15+ projects, 5 engineers: scope and exposure in the displayed snapshot.",
+      "Zero observed incidents: ask about the time window, incident definition, and detection coverage.",
+      "An observed outcome does not identify which control caused it or establish future risk."
+    ],
+    "qualification": "Treat these as the slide’s dated snapshot, not a causal estimate or a current universal result.",
+    "transition": "The distance between those observations and desired guarantees defines the research agenda.",
+    "article_section": {
+      "title": "Quantify uncertainty without manufacturing precision",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#quantify-uncertainty-without-manufacturing-precision"
+    }
+  },
+  {
+    "number": 20,
+    "title": "Open Research Problems",
+    "minutes": 3.5,
+    "main_point": "Turn broad safety topics into experiments with explicit systems, adversaries, properties, and failure criteria.",
+    "cues": [
+      "Model typed effects and verify candidate-bound approval or at-most-one-effect properties under injected crashes.",
+      "Compare injection defenses on eligible pairs, separating useful completion, prohibited effects, and text-only corruption.",
+      "Audit model-proposed capability manifests against deterministic policy for excess grants and blocked legitimate work.",
+      "Test ambiguous timeouts where no commit and committed-with-lost-response yield the same local observation."
+    ],
+    "qualification": "The timeout argument is a synthesis under a stated observation model, not a universal impossibility theorem; stronger provider information can resolve ambiguity.",
+    "transition": "Close by converting each research lesson into one implementable obligation.",
+    "article_section": {
+      "title": "Research problems hidden inside the workflow",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#research-problems-hidden-inside-the-workflow"
+    }
+  },
+  {
+    "number": 21,
+    "title": "Key Takeaways",
+    "minutes": 1.5,
+    "main_point": "Reliable agentic CI comes from bounded authority, explicit state, independently checked evidence, and decision-relevant measurement.",
+    "cues": [
+      "Prevent confused-deputy failures by connecting every request to narrow, current authority.",
+      "Combine measured resistance to hostile text with enforced limits on data and tool effects.",
+      "Treat retries statistically, but retain deterministic checks for the exact predicates they encode.",
+      "Expand authority only after accepted value exceeds review, rework, failure, and downstream cost."
+    ],
+    "qualification": "Every assurance statement must name its property, observation surface, enforcement point, trusted components, and remaining exclusions.",
+    "transition": "Use the remaining time to test those assumptions against the audience's questions.",
+    "article_section": {
+      "title": "Research problems hidden inside the workflow",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#research-problems-hidden-inside-the-workflow"
+    }
+  },
+  {
+    "number": 22,
+    "title": "Questions?",
+    "minutes": 6,
+    "main_point": "Use questions to clarify which guarantee is behavioral, architectural, empirical, or still an open research hypothesis.",
+    "cues": [
+      "Second LLM? Another measured detector; shared models and data can create correlated blind spots.",
+      "Read-only useful? Yes for analysis and review; grant writes only when the workflow requires them.",
+      "Timeout after PR creation? Query stable operation state, then retry only with idempotency or known non-application.",
+      "Strongest claim? A named broker blocks a defined finite bad prefix under stated mediation and conformance assumptions."
+    ],
+    "qualification": "Human review adds context and accountability but is not an oracle; scope retained authority by consequence, reversibility, and measured residual risk.",
+    "transition": "Return to the central question: what exact effect can this system justify under its stated evidence?",
+    "article_section": {
+      "title": "Research problems hidden inside the workflow",
+      "href": "/blog/2026/ai-agents-in-ci-cd.html#research-problems-hidden-inside-the-workflow"
+    }
+  }
+]

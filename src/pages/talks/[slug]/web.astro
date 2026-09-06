@@ -1,0 +1,17 @@
+---
+import LectureViewer from '../../../components/LectureViewer.astro';
+import LectureLayout from '../../../layouts/LectureLayout.astro';
+import { lecture } from '../../../data/lecture';
+import { isLectureAvailable } from '../../../lib/lectures';
+
+export function getStaticPaths() {
+  if (!isLectureAvailable(lecture)) return [];
+  return [{ params: { slug: lecture.slug }, props: { lecture } }];
+}
+
+const { lecture: currentLecture } = Astro.props;
+---
+
+<LectureLayout lecture={currentLecture} variant="web" description={`${currentLecture.title}, website styled HTML slides. ${currentLecture.event}, ${currentLecture.date}.`}>
+  <LectureViewer lecture={currentLecture} mode="web" />
+</LectureLayout>

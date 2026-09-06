@@ -1,0 +1,1255 @@
+---
+import type { Lecture, LectureTranscript } from '../lib/lectures';
+import { lecturePresenterRoute, lectureSlideUrl, lectureSlideCount, transcriptForSlide } from '../lib/lectures';
+
+interface Props {
+  lecture: Lecture;
+  mode?: 'original' | 'web';
+  transcript?: LectureTranscript[];
+}
+
+const { lecture, mode = 'original', transcript = [] } = Astro.props;
+const total = mode === 'web' ? lecture.slides.length : lectureSlideCount(lecture);
+---
+
+<section class="lecture-viewer" data-lecture-viewer data-total={total} data-lecture-slug={lecture.slug} data-lecture-mode={mode} data-presenter-url={lecturePresenterRoute(lecture)} aria-labelledby="original-deck-title">
+  <header class="viewer-header">
+    <p class="section-label">{mode === 'original' ? 'Original Red Hat presentation' : 'HTML slides'}</p>
+    <h1 class="viewer-title" id="original-deck-title">{lecture.title}</h1>
+    <p class="viewer-subtitle">{lecture.subtitle} · {lecture.event} · {lecture.date}</p>
+    <p class="viewer-intro">{mode === 'original' ? 'The Red Hat presentation is preserved as the primary version.' : 'The original slide content is presented in a website styled layout.'} Use the controls or keyboard to move through the deck.</p>
+  </header>
+
+  <div class="lecture-controls" aria-label="Slide controls">
+    <button class="lecture-control" type="button" data-previous aria-label="Previous slide" title="Previous slide (Left arrow, Page Up, Shift + Space)">
+      <span aria-hidden="true">←</span> Previous
+    </button>
+    <p class="slide-status"><span data-slide-number>1</span> / {total}</p>
+    <button class="lecture-control" type="button" data-next aria-label="Next slide" title="Next slide (Right arrow, Page Down, Space)">
+      Next <span aria-hidden="true">→</span>
+    </button>
+    <button class="lecture-control lecture-fullscreen" type="button" data-fullscreen aria-pressed="false" aria-label="Enter fullscreen" title="Enter fullscreen">
+      <span aria-hidden="true">⛶</span> <span data-fullscreen-label>Fullscreen</span>
+    </button>
+    <button class="lecture-control lecture-presenter" type="button" data-presenter aria-label="Open presenter view" title="Open presenter view">
+      <span aria-hidden="true">▤</span> Presenter view
+    </button>
+  </div>
+
+  <p class="presenter-status" data-presenter-status aria-live="polite"></p>
+  <a class="presenter-standalone" data-presenter-standalone href={`${lecturePresenterRoute(lecture)}#mode=${mode}&slide=1`} target="_blank" rel="noopener" hidden>Open standalone notes in a new tab</a>
+
+  <p class="viewer-announcement" data-announcement aria-live="polite"></p>
+
+  <div class="slide-list" data-slide-list>
+    {Array.from({ length: total }, (_, index) => index + 1).map((number) => {
+      const slideTranscript = transcriptForSlide(transcript, number);
+      return (
+        <figure class="lecture-slide" data-slide={number} id={`slide-${number}`} tabindex="-1" aria-label={`${mode === 'original' ? 'Original slide' : 'HTML slide'} ${number} of ${total}`}>
+          {mode === 'original' ? (
+            <div class="original-stage">
+              <img class="slide-image" src={lectureSlideUrl(lecture, number)} alt={`Original presentation slide ${number} of ${total}`} width="1920" height="1082" loading="eager" decoding="async" />
+            </div>
+          ) : (
+            <div class="web-stage">
+              <div class="web-stage-content">
+                {(() => {
+                  const slide = lecture.slides[number - 1];
+                  if (!slide) return <p>Slide {number} is not available in the HTML adaptation.</p>;
+                  return (
+                    <>
+                      <header class="web-stage-header">
+                        <p class="web-stage-section">{slide.section}</p>
+                        <p class="web-stage-number">{String(number).padStart(2, '0')} / {lecture.slides.length}</p>
+                        <h2>{slide.title}</h2>
+                      </header>
+                      {slide.lead && <p class="web-stage-lead">{slide.lead}</p>}
+                      {slide.blocks?.map((block) => (
+                        block.kind === 'text' ? (
+                          <section class="web-text-block">
+                            {block.heading && <h3>{block.heading}</h3>}
+                            {block.lines.map((line) => <p>{line}</p>)}
+                            {block.callout && <p class="web-callout">{block.callout}</p>}
+                          </section>
+                        ) : block.kind === 'bullets' ? (
+                          <section class="web-bullet-block">
+                            {block.heading && <h3>{block.heading}</h3>}
+                            <ul class="web-bullets">{block.items.map((item) => <li>{item}</li>)}</ul>
+                          </section>
+                        ) : block.kind === 'columns' ? (
+                          <div class="web-column-grid">
+                            {block.columns.map((column, columnIndex) => (
+                              <section class="web-column" aria-labelledby={`web-slide-${number}-column-${columnIndex}`}>
+                                <h3 id={`web-slide-${number}-column-${columnIndex}`}>{column.title}</h3>
+                                <ul>{column.items.map((item) => <li>{item}</li>)}</ul>
+                              </section>
+                            ))}
+                          </div>
+                        ) : block.kind === 'table' ? (
+                          <div class="web-table-wrap">
+                            <table class="web-table">
+                              {!block.headerless && <thead><tr>{block.headers.map((header) => <th scope="col">{header}</th>)}</tr></thead>}
+                              <tbody>{block.rows.map((row) => <tr>{row.map((cell, cellIndex) => block.headerless && cellIndex === 0 ? <th scope="row">{cell}</th> : <td>{cell}</td>)}</tr>)}</tbody>
+                            </table>
+                          </div>
+                        ) : block.kind === 'flow' ? (
+                          <ol class="web-flow" aria-label="Automation flow">
+                            {block.items.map((item) => <li><span>{item}</span></li>)}
+                          </ol>
+                        ) : block.kind === 'stats' ? (
+                          <div class="web-stats">
+                            {block.items.map((stat) => <div class="web-stat"><strong>{stat.value}</strong>{stat.label.map((line) => <span>{line}</span>)}</div>)}
+                          </div>
+                        ) : (
+                          <ul class="web-links">{block.links.map((link) => <li><a href={link.url}>{link.label}</a></li>)}</ul>
+                        )
+                      ))}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
+          <figcaption class="slide-caption">
+            <span class="slide-caption-title">{mode === 'original' ? `Original slide ${number} of ${total}` : `HTML slide ${number} of ${total}`}</span>
+            <a class="slide-permalink" href={`#slide-${number}`}>Link to this slide</a>
+            {mode === 'original' && slideTranscript.length > 0 && (
+              <details class="lecture-transcript">
+                <summary>Show transcript for slide {number}</summary>
+                <div class="transcript-lines">
+                  {slideTranscript.map((line) => <span class="transcript-line">{line}</span>)}
+                </div>
+              </details>
+            )}
+          </figcaption>
+        </figure>
+      );
+    })}
+  </div>
+
+  <p class="viewer-help">Keyboard: Left/Right or Page Up/Page Down · Space advances · Shift + Space goes back · Home/End jump to the first or last slide.</p>
+  <p class="viewer-pdf"><a href={`/talks/${lecture.slug}/slides.pdf`}>Open or download the original slide PDF</a></p>
+</section>
+
+<style>
+  .lecture-viewer {
+    padding-top: clamp(3.5rem, 8vw, 7rem);
+  }
+
+  .viewer-header {
+    max-width: 54rem;
+    margin-bottom: 2rem;
+  }
+
+  .viewer-title {
+    max-width: 18ch;
+    margin: 0.45rem 0 0.75rem;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(2.8rem, 7vw, 6rem);
+    font-weight: 400;
+    letter-spacing: -0.065em;
+    line-height: 0.95;
+  }
+
+  .viewer-subtitle,
+  .viewer-intro {
+    color: var(--muted);
+  }
+
+  .viewer-subtitle {
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  .viewer-intro {
+    max-width: 60ch;
+    margin: 1rem 0 0;
+  }
+
+  .lecture-controls {
+    display: none;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+  }
+
+  .lecture-viewer.js-enabled .lecture-controls {
+    display: flex;
+  }
+
+  .lecture-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--rule);
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.88rem;
+  }
+
+  .lecture-control:hover {
+    border-color: var(--text);
+  }
+
+  .lecture-control:disabled {
+    cursor: default;
+    opacity: 0.45;
+  }
+
+  .slide-status {
+    min-width: 4.3rem;
+    margin: 0 auto 0 0.25rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+
+  .lecture-fullscreen {
+    margin-left: auto;
+  }
+
+  .lecture-presenter {
+    border-color: var(--accent);
+  }
+
+  .presenter-status,
+  .presenter-standalone {
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+
+  .presenter-status {
+    margin: 0.5rem 0 0;
+  }
+
+  .presenter-standalone {
+    display: inline-block;
+    margin-top: 0.35rem;
+  }
+
+  .viewer-announcement {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .slide-list {
+    display: grid;
+    gap: 2.5rem;
+    min-height: 0;
+  }
+
+  .lecture-slide {
+    min-width: 0;
+    margin: 0;
+  }
+
+  .lecture-viewer.js-enabled .lecture-slide:not([data-current]) {
+    display: none;
+  }
+
+  .original-stage {
+    display: grid;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid var(--rule);
+    background: #eeede9;
+    box-shadow: 0 1rem 2.5rem rgb(25 24 22 / 10%);
+  }
+
+  .slide-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .web-stage {
+    min-height: min(44rem, 75vh);
+    padding: clamp(1.5rem, 5vw, 4rem);
+    overflow: auto;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+  }
+
+  .web-stage-content {
+    min-height: 100%;
+  }
+
+  .web-stage-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.6rem 2rem;
+    align-items: start;
+    padding-bottom: 1.3rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .web-stage-section,
+  .web-stage-number,
+  .web-stage-sources > p {
+    margin: 0;
+    color: var(--accent);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.74rem;
+    font-weight: 650;
+    letter-spacing: 0.1em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+  .web-stage-number {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .web-stage-header h2 {
+    grid-column: 1 / -1;
+    max-width: 23ch;
+    margin: 1.6rem 0 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(2rem, 5vw, 4.3rem);
+    font-weight: 400;
+    letter-spacing: -0.055em;
+    line-height: 0.98;
+  }
+
+  .web-stage-lead {
+    max-width: 68ch;
+    margin: 2rem 0 0;
+    color: var(--text);
+    font-size: clamp(1.05rem, 1.8vw, 1.3rem);
+    line-height: 1.45;
+  }
+
+  .web-column-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 2.5rem;
+  }
+
+  .web-column {
+    padding: 1.25rem;
+    border: 1px solid var(--rule);
+    background: var(--bg);
+  }
+
+  .web-column h3 {
+    margin: 0 0 0.85rem;
+    font-size: 1rem;
+    font-weight: 650;
+  }
+
+  .web-column ul,
+  .web-bullets,
+  .web-stage-sources ul {
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+
+  .web-column li,
+  .web-bullets li,
+  .web-stage-sources li {
+    margin-top: 0.55rem;
+  }
+
+  .web-column li:first-child,
+  .web-bullets li:first-child,
+  .web-stage-sources li:first-child {
+    margin-top: 0;
+  }
+
+  .web-bullets {
+    max-width: 68ch;
+    margin-top: 2rem;
+  }
+
+  .web-stage-sources {
+    margin-top: 2.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .web-text-block,
+  .web-bullet-block {
+    max-width: 78ch;
+    margin-top: 2rem;
+  }
+
+  .web-text-block h3,
+  .web-bullet-block h3 {
+    margin: 0 0 0.75rem;
+    font-size: 1.05rem;
+    font-weight: 650;
+  }
+
+  .web-text-block p {
+    margin: 0.35rem 0 0;
+    line-height: 1.5;
+  }
+
+  .web-text-block p:first-of-type {
+    margin-top: 0;
+  }
+
+  .web-callout {
+    padding: 0.8rem 1rem;
+    border-left: 2px solid var(--accent);
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .web-column ul,
+  .web-bullets,
+  .web-links,
+  .web-flow {
+    list-style: none;
+    margin: 0;
+    padding-left: 0;
+  }
+
+  .web-bullet-block .web-bullets {
+    margin-top: 0;
+  }
+
+  .web-table-wrap {
+    margin-top: 2rem;
+    overflow-x: auto;
+  }
+
+  .web-table {
+    width: 100%;
+    min-width: 42rem;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+
+  .web-table th,
+  .web-table td {
+    padding: 0.8rem 0.9rem;
+    border: 1px solid var(--rule);
+    vertical-align: top;
+    text-align: left;
+  }
+
+  .web-table th {
+    background: var(--bg);
+    font-weight: 650;
+  }
+
+  .web-flow {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1.5rem;
+    margin-top: 2.5rem;
+  }
+
+  .web-flow li {
+    position: relative;
+    display: grid;
+    min-height: 5rem;
+    place-items: center;
+    padding: 0.8rem;
+    border: 1px solid var(--accent);
+    color: var(--text);
+    font-size: 0.9rem;
+    font-weight: 650;
+    line-height: 1.25;
+    text-align: center;
+  }
+
+  .web-flow li:not(:last-child)::after {
+    position: absolute;
+    right: -1.25rem;
+    color: var(--accent);
+    content: '→';
+    font-size: 1.3rem;
+  }
+
+  .web-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 2.5rem;
+  }
+
+  .web-stat {
+    display: flex;
+    min-height: 9rem;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1.2rem;
+    border: 1px solid var(--rule);
+    background: var(--bg);
+  }
+
+  .web-stat strong {
+    color: var(--accent);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(2.4rem, 6vw, 4.5rem);
+    font-weight: 400;
+    letter-spacing: -0.06em;
+    line-height: 0.9;
+  }
+
+  .web-stat span {
+    margin-top: 0.45rem;
+    font-size: 0.88rem;
+    line-height: 1.25;
+  }
+
+  .web-links {
+    display: grid;
+    gap: 0.7rem;
+    margin-top: 2.5rem;
+  }
+
+  .slide-caption {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.8rem;
+    padding-top: 0.8rem;
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+
+  .slide-caption-section {
+    color: var(--accent);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .slide-caption-title {
+    color: var(--text);
+  }
+
+  .slide-permalink {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+
+  .lecture-transcript {
+    flex-basis: 100%;
+    margin-top: 0.45rem;
+  }
+
+  .lecture-transcript summary {
+    width: fit-content;
+    cursor: pointer;
+    color: var(--muted);
+  }
+
+  .transcript-lines {
+    max-width: 80ch;
+    margin-top: 0.75rem;
+    padding: 0.8rem 1rem;
+    border-left: 2px solid var(--rule);
+    color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+
+  .transcript-line {
+    display: block;
+    min-height: 1.5em;
+  }
+
+  .viewer-help,
+  .viewer-pdf {
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+
+  .viewer-help {
+    margin: 1.5rem 0 0.5rem;
+  }
+
+  .viewer-pdf {
+    margin: 0;
+  }
+
+  .lecture-viewer:fullscreen,
+  .lecture-viewer.is-fullscreen-fallback {
+    display: flex;
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    min-height: 0;
+    flex-direction: column;
+    margin: 0;
+    overflow: hidden;
+    padding: 1rem 2rem;
+    background: var(--bg);
+  }
+
+  .lecture-viewer.is-fullscreen-fallback {
+    position: fixed;
+    z-index: 20;
+    inset: 0;
+  }
+
+  .lecture-viewer:fullscreen .viewer-header,
+  .lecture-viewer:fullscreen .slide-caption,
+  .lecture-viewer:fullscreen .viewer-help,
+  .lecture-viewer:fullscreen .viewer-pdf,
+  .lecture-viewer.is-fullscreen-fallback .viewer-header,
+  .lecture-viewer.is-fullscreen-fallback .slide-caption,
+  .lecture-viewer.is-fullscreen-fallback .viewer-help,
+  .lecture-viewer.is-fullscreen-fallback .viewer-pdf {
+    display: none;
+  }
+
+  .lecture-viewer:fullscreen .slide-list,
+  .lecture-viewer.is-fullscreen-fallback .slide-list {
+    display: block;
+    width: 100%;
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+
+  .lecture-viewer:fullscreen .lecture-slide[data-current],
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-current] {
+    display: block;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .lecture-viewer:fullscreen .original-stage,
+  .lecture-viewer.is-fullscreen-fallback .original-stage {
+    height: 100%;
+    aspect-ratio: auto;
+    position: relative;
+    min-height: 0;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .lecture-viewer:fullscreen .web-stage,
+  .lecture-viewer.is-fullscreen-fallback .web-stage {
+    height: 100%;
+    min-height: 0;
+    container-type: size;
+    border: 0;
+    padding: clamp(1rem, 3vh, 3rem) clamp(1rem, 4vw, 4rem);
+    overflow: hidden;
+  }
+
+  .lecture-viewer:fullscreen .web-stage-content,
+  .lecture-viewer.is-fullscreen-fallback .web-stage-content {
+    min-height: 100%;
+    transform: scale(var(--web-fit, 1));
+    transform-origin: top left;
+  }
+
+  .lecture-viewer:fullscreen .web-stage-section,
+  .lecture-viewer:fullscreen .web-stage-number,
+  .lecture-viewer.is-fullscreen-fallback .web-stage-section,
+  .lecture-viewer.is-fullscreen-fallback .web-stage-number {
+    font-size: clamp(0.75rem, 2cqh, 1.5rem);
+  }
+
+  .lecture-viewer:fullscreen .web-stage-header,
+  .lecture-viewer.is-fullscreen-fallback .web-stage-header {
+    gap: clamp(0.35rem, 1.5cqh, 1.5rem) clamp(1rem, 3vw, 3rem);
+    padding-bottom: clamp(0.75rem, 2.5cqh, 1.5rem);
+  }
+
+  .lecture-viewer:fullscreen .web-text-block,
+  .lecture-viewer:fullscreen .web-bullet-block,
+  .lecture-viewer.is-fullscreen-fallback .web-text-block,
+  .lecture-viewer.is-fullscreen-fallback .web-bullet-block {
+    margin-top: clamp(1rem, 4cqh, 2rem);
+  }
+
+  .lecture-viewer:fullscreen .web-text-block p,
+  .lecture-viewer:fullscreen .web-bullet-block,
+  .lecture-viewer:fullscreen .web-column li,
+  .lecture-viewer:fullscreen .web-table,
+  .lecture-viewer:fullscreen .web-links,
+  .lecture-viewer.is-fullscreen-fallback .web-text-block p,
+  .lecture-viewer.is-fullscreen-fallback .web-bullet-block,
+  .lecture-viewer.is-fullscreen-fallback .web-column li,
+  .lecture-viewer.is-fullscreen-fallback .web-table,
+  .lecture-viewer.is-fullscreen-fallback .web-links {
+    font-size: clamp(1rem, 3.3cqh, 2.5rem);
+    line-height: 1.3;
+  }
+
+  .lecture-viewer:fullscreen .web-text-block h3,
+  .lecture-viewer:fullscreen .web-bullet-block h3,
+  .lecture-viewer:fullscreen .web-column h3,
+  .lecture-viewer.is-fullscreen-fallback .web-text-block h3,
+  .lecture-viewer.is-fullscreen-fallback .web-bullet-block h3,
+  .lecture-viewer.is-fullscreen-fallback .web-column h3 {
+    font-size: clamp(1rem, 3.3cqh, 2.5rem);
+  }
+
+  .lecture-viewer:fullscreen .web-flow,
+  .lecture-viewer.is-fullscreen-fallback .web-flow {
+    gap: clamp(0.7rem, 2cqh, 1.5rem);
+    margin-top: clamp(1rem, 4cqh, 2.5rem);
+  }
+
+  .lecture-viewer:fullscreen .web-flow li,
+  .lecture-viewer.is-fullscreen-fallback .web-flow li {
+    min-height: clamp(3.5rem, 12cqh, 8rem);
+    padding: clamp(0.5rem, 2cqh, 1rem);
+    font-size: clamp(1rem, 3.3cqh, 2.5rem);
+  }
+
+  .lecture-viewer:fullscreen .web-stats,
+  .lecture-viewer.is-fullscreen-fallback .web-stats {
+    gap: clamp(0.7rem, 2cqh, 1rem);
+    margin-top: clamp(1rem, 4cqh, 2.5rem);
+  }
+
+  .lecture-viewer:fullscreen .web-stat,
+  .lecture-viewer.is-fullscreen-fallback .web-stat {
+    min-height: clamp(5rem, 20cqh, 10rem);
+    padding: clamp(0.7rem, 2cqh, 1.2rem);
+  }
+
+  .lecture-viewer:fullscreen .web-stat strong,
+  .lecture-viewer.is-fullscreen-fallback .web-stat strong {
+    font-size: clamp(2.4rem, 10cqh, 6rem);
+  }
+
+  .lecture-viewer:fullscreen .web-stage-header h2,
+  .lecture-viewer.is-fullscreen-fallback .web-stage-header h2 {
+    margin-top: clamp(0.75rem, 2vh, 1.6rem);
+    font-size: clamp(2rem, 8cqh, 7rem);
+  }
+
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='1'] .web-stage-header h2,
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='22'] .web-stage-header h2,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='1'] .web-stage-header h2,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='22'] .web-stage-header h2 {
+    font-size: clamp(2.4rem, 11cqh, 9rem);
+  }
+
+  .lecture-viewer:fullscreen .web-stage-lead,
+  .lecture-viewer.is-fullscreen-fallback .web-stage-lead {
+    margin-top: clamp(1rem, 3cqh, 2rem);
+    font-size: clamp(1rem, 3.8cqh, 2.5rem);
+    line-height: 1.35;
+  }
+
+  /* Dense source slides keep every line while using the available projection height. */
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='9'] .web-stage-content,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='9'] .web-stage-content,
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='20'] .web-stage-content,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='20'] .web-stage-content {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    column-gap: clamp(0.75rem, 2.5cqh, 2rem);
+    row-gap: clamp(0.5rem, 1.5cqh, 1.25rem);
+  }
+
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='9'] .web-stage-header,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='9'] .web-stage-header,
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='20'] .web-stage-header,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='20'] .web-stage-header {
+    grid-column: 1 / -1;
+  }
+
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='9'] .web-text-block,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='9'] .web-text-block,
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='20'] .web-text-block,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='20'] .web-text-block {
+    width: auto;
+    max-width: none;
+    margin-top: clamp(0.4rem, 1.5cqh, 1rem);
+  }
+
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='9'] .web-text-block p,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='9'] .web-text-block p,
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='20'] .web-text-block p,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='20'] .web-text-block p {
+    font-size: clamp(0.95rem, 2.55cqh, 2rem);
+    line-height: 1.22;
+  }
+
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='9'] .web-text-block h3,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='9'] .web-text-block h3,
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='20'] .web-text-block h3,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='20'] .web-text-block h3 {
+    margin-bottom: clamp(0.3rem, 1cqh, 0.75rem);
+    font-size: clamp(0.95rem, 2.7cqh, 2.1rem);
+    line-height: 1.1;
+  }
+
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='9'] .web-callout,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='9'] .web-callout {
+    margin-top: clamp(0.25rem, 0.75cqh, 0.5rem);
+    padding: clamp(0.35rem, 1cqh, 0.8rem) clamp(0.5rem, 1.2cqh, 1rem);
+  }
+
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='10'] .web-stage-header h2,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='10'] .web-stage-header h2,
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='15'] .web-stage-header h2,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='15'] .web-stage-header h2,
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='16'] .web-stage-header h2,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='16'] .web-stage-header h2 {
+    font-size: clamp(1.75rem, 6cqh, 5rem);
+  }
+
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='10'] .web-text-block,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='10'] .web-text-block,
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='10'] .web-bullet-block,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='10'] .web-bullet-block,
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='15'] .web-text-block,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='15'] .web-text-block,
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='16'] .web-text-block,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='16'] .web-text-block {
+    margin-top: clamp(0.75rem, 2cqh, 1.25rem);
+  }
+
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='10'] .web-bullets,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='10'] .web-bullets {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(3, auto);
+    column-gap: clamp(1rem, 3vw, 3rem);
+    row-gap: clamp(0.2rem, 0.75cqh, 0.6rem);
+  }
+
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='10'] .web-bullets li,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='10'] .web-bullets li,
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='15'] .web-column li,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='15'] .web-column li,
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='16'] .web-column li,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='16'] .web-column li {
+    font-size: clamp(0.95rem, 2.55cqh, 2rem);
+    line-height: 1.2;
+  }
+
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='15'] .web-column-grid,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='15'] .web-column-grid,
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='16'] .web-column-grid,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='16'] .web-column-grid {
+    margin-top: clamp(0.75rem, 2cqh, 1.5rem);
+  }
+
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='15'] .web-column,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='15'] .web-column,
+  .lecture-viewer:fullscreen .lecture-slide[data-slide='16'] .web-column,
+  .lecture-viewer.is-fullscreen-fallback .lecture-slide[data-slide='16'] .web-column {
+    padding: clamp(0.55rem, 1.5cqh, 1.25rem);
+  }
+
+  .lecture-viewer:fullscreen .web-column-grid,
+  .lecture-viewer.is-fullscreen-fallback .web-column-grid {
+    gap: clamp(0.75rem, 2cqh, 2rem);
+    margin-top: clamp(1rem, 4cqh, 2.5rem);
+  }
+
+  .lecture-viewer:fullscreen .web-column,
+  .lecture-viewer.is-fullscreen-fallback .web-column {
+    padding: clamp(0.75rem, 2.5cqh, 1.5rem);
+  }
+
+  .lecture-viewer:fullscreen .web-column h3,
+  .lecture-viewer.is-fullscreen-fallback .web-column h3,
+  .lecture-viewer:fullscreen .web-column li,
+  .lecture-viewer:fullscreen .web-bullets,
+  .lecture-viewer.is-fullscreen-fallback .web-column li,
+  .lecture-viewer.is-fullscreen-fallback .web-bullets {
+    font-size: clamp(1rem, 3.3cqh, 2.5rem);
+    line-height: 1.3;
+  }
+
+  .lecture-viewer:fullscreen .web-column li,
+  .lecture-viewer:fullscreen .web-bullets li,
+  .lecture-viewer.is-fullscreen-fallback .web-column li,
+  .lecture-viewer.is-fullscreen-fallback .web-bullets li {
+    margin-top: clamp(0.3rem, 1cqh, 0.75rem);
+  }
+
+  .lecture-viewer:fullscreen .web-bullets,
+  .lecture-viewer.is-fullscreen-fallback .web-bullets {
+    margin-top: clamp(1rem, 4cqh, 2rem);
+  }
+
+  .lecture-viewer:fullscreen .slide-image,
+  .lecture-viewer.is-fullscreen-fallback .slide-image {
+    position: absolute;
+    inset: 0;
+  }
+
+  @media (max-width: 640px) {
+    .lecture-shell {
+      width: min(calc(100% - 1.5rem), var(--max-width));
+    }
+
+    .lecture-control {
+      flex: 1 1 auto;
+      justify-content: center;
+    }
+
+    .slide-status {
+      order: -1;
+      flex-basis: 100%;
+      margin: 0 0 0.25rem;
+    }
+
+    .lecture-fullscreen {
+      margin-left: 0;
+    }
+
+    .web-stage-header {
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+    }
+
+    .web-stage-number {
+      grid-row: 2;
+    }
+
+    .web-column-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .lecture-viewer.is-fullscreen-fallback,
+    .lecture-viewer:fullscreen {
+      padding: 1rem;
+    }
+
+    .lecture-viewer.is-fullscreen-fallback .web-stage,
+    .lecture-viewer:fullscreen .web-stage {
+      overflow: auto;
+    }
+
+    .lecture-viewer.is-fullscreen-fallback .web-stage-content,
+    .lecture-viewer:fullscreen .web-stage-content {
+      transform: none;
+    }
+  }
+
+  @media print {
+    @page {
+      size: landscape;
+      margin: 0.35in;
+    }
+
+    :global(body:has(.lecture-viewer) .site-header),
+    :global(body:has(.lecture-viewer) .site-footer),
+    :global(body:has(.lecture-viewer) .lecture-nav) {
+      display: none;
+    }
+
+    .lecture-viewer {
+      padding-top: 0;
+    }
+
+    .lecture-controls,
+    .viewer-header,
+    .slide-caption,
+    .viewer-help,
+    .viewer-pdf,
+    .lecture-transcript {
+      display: none;
+    }
+
+    .lecture-viewer.js-enabled .lecture-slide:not([data-current]) {
+      display: grid !important;
+    }
+
+    .lecture-slide:not(:last-child) {
+      break-after: page;
+    }
+
+    .original-stage {
+      box-shadow: none;
+    }
+  }
+</style>
+
+<script>
+  import {
+    createPresenterSession,
+    parsePresenterMessage,
+    presenterChannelName,
+    presenterFragment,
+    type PresenterMode,
+  } from '../scripts/lecture-presenter-protocol';
+
+  const viewer = document.querySelector<HTMLElement>('[data-lecture-viewer]');
+
+  if (viewer) {
+    const slides = Array.from(viewer.querySelectorAll<HTMLElement>('[data-slide]'));
+    const total = Number(viewer.dataset.total) || slides.length;
+    const previous = viewer.querySelector<HTMLButtonElement>('[data-previous]');
+    const next = viewer.querySelector<HTMLButtonElement>('[data-next]');
+    const fullscreen = viewer.querySelector<HTMLButtonElement>('[data-fullscreen]');
+    const fullscreenLabel = viewer.querySelector<HTMLElement>('[data-fullscreen-label]');
+    const numberLabel = viewer.querySelector<HTMLElement>('[data-slide-number]');
+    const announcement = viewer.querySelector<HTMLElement>('[data-announcement]');
+    const presenterButton = viewer.querySelector<HTMLButtonElement>('[data-presenter]');
+    const presenterStatus = viewer.querySelector<HTMLElement>('[data-presenter-status]');
+    const presenterStandalone = viewer.querySelector<HTMLAnchorElement>('[data-presenter-standalone]');
+    const lectureSlug = viewer.dataset.lectureSlug || 'lecture';
+    const presenterUrl = viewer.dataset.presenterUrl || `/talks/${lectureSlug}/presenter.html`;
+    const presenterMode = (viewer.dataset.lectureMode === 'web' ? 'web' : 'original') as PresenterMode;
+    let current = 1;
+    let presenterChannel: BroadcastChannel | null = null;
+    let presenterWindow: Window | null = null;
+    let presenterSession: string | null = null;
+    let presenterStateSequence = 0;
+    let presenterCommandSequence = -1;
+    let presenterWindowWatch: number | null = null;
+    let presenterHeartbeatAt = 0;
+
+    const setPresenterStatus = (message: string) => {
+      if (presenterStatus) presenterStatus.textContent = message;
+    };
+
+    const updateStandaloneLink = () => {
+      if (presenterStandalone) presenterStandalone.href = `${presenterStandalone.pathname}${presenterFragment({ mode: presenterMode, slide: current })}`;
+    };
+
+    function broadcastPresenterState(type: 'state' | 'heartbeat' = 'state') {
+      if (!presenterChannel || !presenterSession) return;
+      presenterStateSequence += 1;
+      presenterChannel.postMessage({
+        version: 1,
+        type,
+        session: presenterSession,
+        mode: presenterMode,
+        slide: current,
+        total,
+        sequence: presenterStateSequence,
+      });
+      presenterHeartbeatAt = Date.now();
+    }
+
+    function cleanupPresenter(sendEnded: boolean) {
+      if (presenterWindowWatch !== null) window.clearInterval(presenterWindowWatch);
+      presenterWindowWatch = null;
+      if (presenterChannel) {
+        if (sendEnded && presenterSession) {
+          try {
+            presenterChannel.postMessage({ version: 1, type: 'ended', session: presenterSession, mode: presenterMode });
+          } catch {
+            // The channel may already be unavailable while the page is closing.
+          }
+        }
+        presenterChannel.close();
+      }
+      presenterChannel = null;
+      presenterSession = null;
+      presenterWindow = null;
+      presenterCommandSequence = -1;
+    }
+
+    function openPresenter() {
+      updateStandaloneLink();
+      if (presenterWindow && !presenterWindow.closed) {
+        presenterWindow.focus();
+        return;
+      }
+      cleanupPresenter(false);
+      const session = createPresenterSession();
+      const canBroadcast = Boolean(session) && typeof BroadcastChannel !== 'undefined';
+      if (canBroadcast && session) {
+        try {
+          presenterSession = session;
+          presenterStateSequence = 0;
+          presenterCommandSequence = -1;
+          presenterChannel = new BroadcastChannel(presenterChannelName(lectureSlug, presenterMode, session));
+          presenterChannel.addEventListener('message', (event: MessageEvent<unknown>) => {
+            if (!presenterSession || !presenterChannel) return;
+            const message = parsePresenterMessage(event.data, { session: presenterSession, mode: presenterMode });
+            if (!message) return;
+            if (message.type === 'ready') {
+              presenterCommandSequence = -1;
+              broadcastPresenterState();
+              return;
+            }
+            if (message.type !== 'command' || message.sequence <= presenterCommandSequence) return;
+            presenterCommandSequence = message.sequence;
+            if (message.command === 'previous') {
+              const before = current;
+              move(-1);
+              if (current === before) broadcastPresenterState();
+            } else if (message.command === 'next') {
+              const before = current;
+              move(1);
+              if (current === before) broadcastPresenterState();
+            } else if (message.command === 'first') {
+              setSlide(1, true);
+            } else if (message.command === 'last') {
+              setSlide(total, true);
+            } else if (typeof message.slide === 'number') {
+              setSlide(message.slide, true);
+            }
+          });
+          const popupUrl = `${window.location.origin}${presenterUrl}${presenterFragment({ session, mode: presenterMode, slide: current })}`;
+          presenterWindow = window.open(popupUrl, '_blank', 'popup,width=1120,height=820,resizable=yes,scrollbars=yes');
+          if (!presenterWindow) throw new Error('popup blocked');
+          presenterWindow.focus();
+          setPresenterStatus('Presenter view opened in a separate window.');
+          broadcastPresenterState();
+        } catch {
+          cleanupPresenter(false);
+          presenterStandalone?.removeAttribute('hidden');
+          setPresenterStatus('Presenter view could not be opened or connected. Open standalone notes in a new tab.');
+          return;
+        }
+      } else {
+        presenterWindow = window.open(`${window.location.origin}${presenterUrl}${presenterFragment({ mode: presenterMode, slide: current })}`, '_blank', 'popup,width=1120,height=820,resizable=yes,scrollbars=yes');
+        if (!presenterWindow) {
+          presenterStandalone?.removeAttribute('hidden');
+          setPresenterStatus('Presenter view is available in a new tab.');
+          return;
+        }
+        presenterWindow.focus();
+        setPresenterStatus('Presenter view opened in standalone mode.');
+      }
+      presenterWindowWatch = window.setInterval(() => {
+        if (presenterWindow?.closed) {
+          cleanupPresenter(false);
+          setPresenterStatus('Presenter view closed.');
+        } else if (presenterChannel && presenterSession && Date.now() - presenterHeartbeatAt >= 2000) {
+          broadcastPresenterState('heartbeat');
+        }
+      }, 1000);
+    }
+
+    const fitWebStage = () => {
+      const activeStage = viewer.querySelector<HTMLElement>('.lecture-slide[data-current] .web-stage');
+      const content = activeStage?.querySelector<HTMLElement>('.web-stage-content');
+      const inFullscreen = document.fullscreenElement === viewer || viewer.classList.contains('is-fullscreen-fallback');
+      if (!activeStage || !content || !inFullscreen || window.innerWidth <= 640) {
+        content?.style.removeProperty('--web-fit');
+        return;
+      }
+      requestAnimationFrame(() => {
+        if (!content.isConnected || !(document.fullscreenElement === viewer || viewer.classList.contains('is-fullscreen-fallback'))) return;
+        content.style.removeProperty('--web-fit');
+        const stageStyle = window.getComputedStyle(activeStage);
+        const availableWidth = activeStage.clientWidth - Number.parseFloat(stageStyle.paddingLeft) - Number.parseFloat(stageStyle.paddingRight);
+        const availableHeight = activeStage.clientHeight - Number.parseFloat(stageStyle.paddingTop) - Number.parseFloat(stageStyle.paddingBottom);
+        const widthRatio = content.scrollWidth > 0 ? availableWidth / content.scrollWidth : 1;
+        const heightRatio = content.scrollHeight > 0 ? availableHeight / content.scrollHeight : 1;
+        const fit = Math.min(1, widthRatio, heightRatio);
+        content.style.setProperty('--web-fit', String(Math.max(0.01, fit)));
+      });
+    };
+
+    const slideFromHash = () => {
+      const match = window.location.hash.match(/^#slide-(\d+)$/);
+      const value = match ? Number(match[1]) : 1;
+      return Number.isInteger(value) && value >= 1 && value <= total ? value : 1;
+    };
+
+    const setSlide = (value: number, push = false) => {
+      const bounded = Math.max(1, Math.min(total, value));
+      const changed = bounded !== current;
+      const outgoingSlide = slides.find((slide) => Number(slide.dataset.slide) === current);
+      const focusSlide = outgoingSlide?.contains(document.activeElement) ?? false;
+      current = bounded;
+      slides.forEach((slide) => {
+        const active = Number(slide.dataset.slide) === current;
+        slide.toggleAttribute('data-current', active);
+        slide.setAttribute('aria-hidden', String(!active));
+      });
+      numberLabel && (numberLabel.textContent = String(current));
+      announcement && (announcement.textContent = `Slide ${current} of ${total}`);
+      if (previous) previous.disabled = current <= 1;
+      if (next) next.disabled = current >= total;
+      const url = new URL(window.location.href);
+      url.hash = `slide-${current}`;
+      if (push && changed) window.history.pushState({}, '', url);
+      else if (window.location.hash !== `#slide-${current}`) window.history.replaceState({}, '', url);
+      fitWebStage();
+      updateStandaloneLink();
+      broadcastPresenterState();
+      if (focusSlide && changed) slides.find((slide) => Number(slide.dataset.slide) === current)?.focus({ preventScroll: true });
+    };
+
+    const move = (delta: number) => {
+      const target = Math.max(1, Math.min(total, current + delta));
+      if (target !== current) setSlide(target, true);
+    };
+    const editableTarget = (target: EventTarget | null) => target instanceof HTMLElement && Boolean(target.closest('input,textarea,select,[contenteditable="true"]'));
+    const ownsSpace = (target: EventTarget | null) => target instanceof HTMLElement && Boolean(target.closest('a,button,summary'));
+
+    viewer.classList.add('js-enabled');
+    setSlide(slideFromHash());
+    previous?.addEventListener('click', () => move(-1));
+    next?.addEventListener('click', () => move(1));
+    presenterButton?.addEventListener('click', openPresenter);
+    window.addEventListener('hashchange', () => setSlide(slideFromHash()));
+    window.addEventListener('popstate', () => setSlide(slideFromHash()));
+    window.addEventListener('pagehide', () => cleanupPresenter(true));
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && viewer.classList.contains('is-fullscreen-fallback')) {
+        viewer.classList.remove('is-fullscreen-fallback');
+        updateFullscreenLabel();
+        return;
+      }
+      if (event.ctrlKey || event.metaKey || event.altKey || editableTarget(event.target) || (event.key === ' ' && ownsSpace(event.target))) return;
+      if (event.key === 'ArrowLeft' || event.key === 'PageUp' || (event.key === ' ' && event.shiftKey)) {
+        event.preventDefault();
+        move(-1);
+      } else if (event.key === 'ArrowRight' || event.key === 'PageDown' || (event.key === ' ' && !event.shiftKey)) {
+        event.preventDefault();
+        move(1);
+      } else if (event.key === 'Home') {
+        event.preventDefault();
+        setSlide(1, true);
+      } else if (event.key === 'End') {
+        event.preventDefault();
+        setSlide(total, true);
+      }
+    });
+
+    const updateFullscreenLabel = () => {
+      const active = document.fullscreenElement === viewer || viewer.classList.contains('is-fullscreen-fallback');
+      fullscreen?.setAttribute('aria-pressed', String(active));
+      fullscreen?.setAttribute('aria-label', active ? 'Exit fullscreen' : 'Enter fullscreen');
+      fullscreen?.setAttribute('title', active ? 'Exit fullscreen' : 'Enter fullscreen');
+      fullscreenLabel && (fullscreenLabel.textContent = active ? 'Exit fullscreen' : 'Fullscreen');
+      fitWebStage();
+    };
+
+    fullscreen?.addEventListener('click', async () => {
+      if (document.fullscreenElement === viewer) {
+        await document.exitFullscreen?.();
+      } else if (viewer.classList.contains('is-fullscreen-fallback')) {
+        viewer.classList.remove('is-fullscreen-fallback');
+      } else if (viewer.requestFullscreen) {
+        try {
+          await viewer.requestFullscreen();
+        } catch {
+          viewer.classList.add('is-fullscreen-fallback');
+        }
+      } else {
+        viewer.classList.add('is-fullscreen-fallback');
+      }
+      updateFullscreenLabel();
+    });
+    document.addEventListener('fullscreenchange', updateFullscreenLabel);
+    window.addEventListener('resize', fitWebStage);
+  }
+</script>

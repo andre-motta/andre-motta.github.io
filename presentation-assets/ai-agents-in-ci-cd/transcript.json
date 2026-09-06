@@ -1,0 +1,355 @@
+[
+  {
+    "slide": 1,
+    "text": [
+      "AI Agents in CI/CD:",
+      "Security, Robustness, and Productivity",
+      "A Deep Dive from Theory to Production",
+      "Andre Lustosa, PhD    Principal Software Engineer | Red Hat | AIPCC Ecosystems",
+      "1"
+    ]
+  },
+  {
+    "slide": 2,
+    "text": [
+      "Lecture Outline",
+      "I.  Foundations                              Agent architectures, delegation, and the confused deputy",
+      "II.  Security Theory                         Injection taxonomy, trust boundaries, containment primitives",
+      "III. Robustness                              Non-determinism, convergence, cycle detection, action-space reduction",
+      "IV. Measurement                              Productivity quantification, automation bias, human-in-the-loop control",
+      "V.  Open Problems                            Formal verification, alignment in CI, research frontiers",
+      "2"
+    ]
+  },
+  {
+    "slide": 3,
+    "text": [
+      "I. FOUNDATIONS",
+      "Agent Architecture: From Theory to Tool-Use LLMs",
+      "Agent Model                                                                     Tool-Use LLM as UTM Analog",
+      "\u25b8 Sense: read files, API responses, CI logs                                     \u25b8 LLM + tools = Turing-complete system",
+      "\u25b8 Reason: LLM inference (probabilistic)                                         \u25b8 Tape: filesystem, git repos, APIs",
+      "\u25b8 Act: write files, run commands, call APIs                                     \u25b8 Head: tool-use function calls",
+      "\u25b8 Loop: observe outcome, adjust, repeat                                         \u25b8 Control: learned policy (weights), not program",
+      "\u25b8 Halting: not guaranteed (token limits as proxy)",
+      "Key distinction from classical AI agents: the reasoning                         Consequence: you cannot statically determine what an agent",
+      "engine is a neural network with no formal guarantees on                         will do. All safety must be enforced at the environment",
+      "output correctness.                                                             boundary.",
+      "3"
+    ]
+  },
+  {
+    "slide": 4,
+    "text": [
+      "I. FOUNDATIONS",
+      "The \u201cPrincipal-Agent\u201d Problem in AI Automation",
+      "\u25b8 Economics: principal delegates to agent with misaligned incentives",
+      "\u25b8 In AI CI/CD: the organization delegates code changes to an LLM agent",
+      "\u25b8 Information asymmetry: agent 'sees' codebase details principal doesn't verify",
+      "\u25b8 Moral hazard: agent may take shortcuts invisible at review time",
+      "\u25b8 Adverse selection: which tasks are suitable for delegation?",
+      "The classical solution is monitoring + incentives. For LLM agents, monitoring = code review + gates + telemetry.",
+      "'Incentives' = prompt engineering + structured output constraints. Neither is complete.",
+      "4"
+    ]
+  },
+  {
+    "slide": 5,
+    "text": [
+      "I. FOUNDATIONS",
+      "The Confused Deputy Revisited",
+      "Classic Confused Deputy (1988)                                                        LLM Agent as Confused Deputy",
+      "\u25b8 Program A has authority to write billing file                                       \u25b8 Agent has git push + API credentials (authority)",
+      "\u25b8 User B tricks A into writing user-controlled data                                   \u25b8 Attacker embeds instructions in a bug ticket (trick)",
+      "\u25b8 A acts on B's behalf using A's privileges                                           \u25b8 Agent executes attacker's intent with org's credentials",
+      "\u25b8 Root cause: ambient authority not scoped to intent                                  \u25b8 Root cause: identical. Ambient authority + untrusted",
+      "input",
+      "Mitigation: Capability-Based Security",
+      "Replace ambient authority with explicit capabilities. The agent receives only the permissions it needs for the specific task, scoped",
+      "by ticket, repo, and time window. This is the theoretical basis for our gate architecture.",
+      "5"
+    ]
+  },
+  {
+    "slide": 6,
+    "text": [
+      "II. SECURITY",
+      "Injection Attack Taxonomy: Why Prompt Injection is",
+      "DifferentAttack Class                 Mechanism                                   Defense                              Why It Works",
+      "SQL Injection                        Untrusted data interpreted as SQL           Parameterized queries                Grammar-based separation",
+      "XSS                                  Untrusted data interpreted as script        Output encoding / CSP                Context-aware escaping",
+      "Command Injection                    Untrusted data interpreted as shell         Avoid shell; use execve              Argument isolation",
+      "Prompt Injection                     Untrusted data interpreted as               ???                                  No grammar to parse",
+      "instruction",
+      "Every prior injection class was solved by separating data from code at a syntactic level. Prompt injection cannot be solved this",
+      "way because natural language has no formal grammar that distinguishes instruction from data.",
+      "6"
+    ]
+  },
+  {
+    "slide": 7,
+    "text": [
+      "II. SECURITY",
+      "Trust Boundary Analysis",
+      "Formal decomposition: Who provides input? What authority does the agent hold? When is output trusted?",
+      "WHO (Identity Layer)                                       WHAT (Authority Layer)                                     WHEN (Temporal Layer)",
+      "\u25b8 Trigger author (changelog-verified)                      \u25b8 Git push to specific branches                            \u25b8 Pre-agent: input filtering",
+      "\u25b8 Comment authors (email-domain                            \u25b8 MR/PR creation and update                                \u25b8 During: runtime containment",
+      "filtered)                                                  \u25b8 Issue tracker mutations                                  \u25b8 Post-agent: output validation",
+      "\u25b8 External reporters (quarantined)                         \u25b8 Network egress (sandboxed)                               \u25b8 Post-merge: monitoring",
+      "\u25b8 The LLM itself (not a trusted source)",
+      "7"
+    ]
+  },
+  {
+    "slide": 8,
+    "text": [
+      "II. SECURITY",
+      "Case Study: Defense in Depth in Production",
+      "Case Study: Red Hat Agentic CI gate architecture (production since 2025)",
+      "PRE-AGENT                                                                           POST-AGENT",
+      "\u25b8 Label author: @redhat.com via Jira changelog API                                  \u25b8 Sensitive files: blocks .env, .pem, .key commits",
+      "\u25b8 External reporter gate: quarantine + human review                                 \u25b8 Secret scan: gitleaks on all commits pre-push",
+      "\u25b8 Comment filter: only @redhat.com in prompt                                        \u25b8 Commit identity: author matches expected bot",
+      "\u25b8 Embargo: JQL excludes EMBARGOED tickets                                           \u25b8 Visibility: comments restricted to employees",
+      "\u25b8 AI sensitivity: semantic security-bug detection",
+      "e.g: https://opendatahub-io.github.io/agentic-ci/api/gates/",
+      "8"
+    ]
+  },
+  {
+    "slide": 9,
+    "text": [
+      "II. SECURITY",
+      "Containment Primitives: Kernel-Level Enforcement",
+      "Landlock (Linux 5.13+)",
+      "Filesystem access control via LSM. Process declares which paths it can read/write.               Restrict agent to workspace directory +",
+      "Inherited by children. No root required.                                                         read-only deps",
+      "seccomp-bpf",
+      "System call filtering via BPF programs. Blocks dangerous syscalls (ptrace, mount,                Prevent container escape and privilege",
+      "kexec). Granular per-process policy.                                                             escalation",
+      "Network Namespaces + nftables",
+      "Per-sandbox network stack with firewall rules. Allowlist-only egress. No ambient                 Block exfiltration to attacker-controlled",
+      "network access.                                                                                  endpoints",
+      "These are kernel-level enforcement mechanisms. The agent cannot bypass them regardless of prompt injection success.",
+      "9"
+    ]
+  },
+  {
+    "slide": 10,
+    "text": [
+      "II. SECURITY",
+      "Case Study: Sandboxing in Production",
+      "Case Study: OpenShell sandbox in Red Hat Agentic CI",
+      "\u25b8 Embedded gateway starts per CI job, no external infrastructure",
+      "\u25b8 Landlock: agent writes only to /workspace, reads only approved paths",
+      "\u25b8 Network: allowlist of endpoints (configurable per-repo via .agentic-ci/openshell-policy.yml)",
+      "\u25b8 Default allowlist: GitHub, GitLab, PyPI, Vertex AI, Anthropic API",
+      "\u25b8 Credentials mounted read-only, never exposed as environment variables in the sandbox",
+      "\u25b8 All other outbound traffic silently dropped (not rejected, to avoid side-channel leaks)",
+      "Design principle: the sandbox is the security boundary, not the prompt. If you rely on prompt instructions for safety,",
+      "you've already lost.",
+      "10"
+    ]
+  },
+  {
+    "slide": 11,
+    "text": [
+      "II. SECURITY",
+      "The Oracle Problem: Limits of Output Verification",
+      "\u25b8 Can you formally verify that LLM output is 'safe'?",
+      "\u25b8 Rice's theorem: any non-trivial semantic property of programs is undecidable",
+      "\u25b8 The generated code IS a program. Verifying its safety is at least as hard as the halting problem.",
+      "\u25b8 Practical implication: you cannot build a gate that provably catches all malicious output",
+      "\u25b8 What you CAN do: reduce the attack surface until the residual risk is manageable",
+      "The Defense Stack (ordered by enforceability)",
+      "\u25b8 1. Kernel enforcement (Landlock, seccomp, netfilter) - cannot be bypassed by the agent",
+      "\u25b8 2. Structural validation (gitleaks, file-path checks) - syntactic, decidable",
+      "\u25b8 3. Semantic analysis (AI-powered review) - probabilistic, best-effort",
+      "\u25b8 4. Human review - highest quality, lowest throughput",
+      "11"
+    ]
+  },
+  {
+    "slide": 12,
+    "text": [
+      "III. ROBUSTNESS",
+      "Non-Determinism in Agentic Systems",
+      "Sources of Non-Determinism                                                            Consequences for CI/CD",
+      "\u25b8 Sampling temperature (even at T=0, not deterministic)                               \u25b8 Same bug + same prompt = different patches",
+      "\u25b8 Context window position effects                                                     \u25b8 Retry may produce better OR worse results",
+      "\u25b8 Batching and quantization artifacts                                                 \u25b8 Test suite pass is necessary but not sufficient",
+      "\u25b8 Tool output variance (git diff timing, API responses)                               \u25b8 Idempotency cannot be assumed",
+      "\u25b8 Prompt sensitivity to minor wording changes                                         \u25b8 Statistical reliability, not deterministic correctness",
+      "Mitigation Strategies",
+      "\u25b8 Structured output schemas: constrain output space to valid shapes",
+      "\u25b8 Verdict-based skill design: agent must declare intent before acting",
+      "\u25b8 Idempotent gate design: gates are safe to re-run on retry",
+      "\u25b8 Monotonic state machines: workflow state can only move forward, never back",
+      "12"
+    ]
+  },
+  {
+    "slide": 13,
+    "text": [
+      "III. ROBUSTNESS",
+      "Convergence and Divergence in Feedback Loops",
+      "When does a closed-loop agentic system converge to a fixed point?",
+      "Convergent Patterns                                                             Divergent Patterns",
+      "\u25b8 Bug fix iteration: review feedback narrows the solution                       \u25b8 Self-healing loops without cycle detection",
+      "\u25b8 Bounded retry with monotonic state                                            \u25b8 Agent 'fixes' its own fixes (oscillation)",
+      "\u25b8 Human checkpoint breaks infinite loops                                        \u25b8 Expanding scope: agent adds features while fixing bugs",
+      "\u25b8 CI pass/fail provides a decidable termination criterion                       \u25b8 Cost explosion: each retry consumes tokens",
+      "\u25b8 Diminishing error surface per iteration                                       \u25b8 Cascading failures across dependent pipelines",
+      "13"
+    ]
+  },
+  {
+    "slide": 14,
+    "text": [
+      "III. ROBUSTNESS",
+      "Case Study: Cycle Detection in Self-Healing CI",
+      "Case Study: Pipeline Failure Analyzer-Autofix cycle prevention at Red Hat",
+      "Autofix                              PFA                               Creates                             Autofix                           Would Fix",
+      "Pipeline                           Analyzes                               Bug                             Sees New                             Its Own",
+      "Fails                              Failure                             Ticket                             Ticket                             Failure",
+      "Solution: Label-Based Cycle Prevention",
+      "\u25b8 PFA-created tickets receive no-autofix label at creation time",
+      "\u25b8 Autofix's query excludes tickets with no-autofix label",
+      "\u25b8 Cycle is broken at the state machine level, not by detection heuristics",
+      "\u25b8 Formal property: the label graph is a DAG, not a cycle",
+      "\u25b8 Same pattern applies to any self-referential automation chain",
+      "14"
+    ]
+  },
+  {
+    "slide": 15,
+    "text": [
+      "III. ROBUSTNESS",
+      "Action Space Reduction via Skills",
+      "Skills as structured constraints that reduce the agent's effective action space",
+      "Unconstrained Agent                                                                 Skill-Constrained Agent",
+      "\u25b8 Action space: all possible tool call sequences                                    \u25b8 Action space: task-specific instruction set",
+      "\u25b8 High variance in output quality                                                   \u25b8 Structured verdict: declare intent before acting",
+      "\u25b8 Harder to review (anything could happen)                                          \u25b8 Reviewable: expected behavior is documented",
+      "\u25b8 Security surface: entire tool set                                                 \u25b8 Security surface: scoped to task requirements",
+      "Analogy: type systems for agents",
+      "Skills function like type signatures: they constrain the space of valid behaviors without dictating implementation. A/B testing of skill",
+      "variants (our production approach) is analogous to benchmarking type system designs for ergonomics and correctness tradeoffs.",
+      "15"
+    ]
+  },
+  {
+    "slide": 16,
+    "text": [
+      "IV. MEASUREMENT",
+      "Measuring AI Agent Productivity",
+      "Naive Metrics (misleading)                                                       Better Metrics (still imperfect)",
+      "\u25b8 MRs merged per week (quantity, not quality)                                    \u25b8 Review acceptance rate (% merged without revision)",
+      "\u25b8 Lines of code changed (Goodhart's law)                                         \u25b8 Engineer time displaced (hours saved per task)",
+      "\u25b8 Time to first MR (ignores review cost)                                         \u25b8 Defect escape rate (bugs introduced by agent)",
+      "\u25b8 Bug close rate (includes false closures)                                       \u25b8 Cost per merged MR (tokens + review time)",
+      "The Measurement Paradox",
+      "If agents handle the easy bugs, engineers handle the hard ones. Average bug resolution time may INCREASE because",
+      "the easy bugs no longer pull down the average. Productivity improvements are real but invisible in aggregate metrics.",
+      "You need cohort analysis: compare similar-difficulty tasks with and without agent assistance.",
+      "16"
+    ]
+  },
+  {
+    "slide": 17,
+    "text": [
+      "IV. MEASUREMENT",
+      "Automation Bias and Over-Reliance",
+      "\u25b8 Automation bias: tendency to favor suggestions from automated systems",
+      "\u25b8 Particularly dangerous in code review: AI says it's fine, reviewer agrees faster",
+      "\u25b8 Complacency effect increases with perceived agent reliability",
+      "\u25b8 The 'LGTM stamp' risk: human review degrades when agent review exists",
+      "\u25b8 Ironically, better agents may produce worse human review quality",
+      "Countermeasures",
+      "\u25b8 Agent never self-merges: humans must take an explicit action",
+      "\u25b8 AI review complements, does not replace, human review assignment",
+      "\u25b8 Chill mode: suppress low-severity findings to prevent review fatigue",
+      "\u25b8 Defect injection testing: periodically verify human reviewers catch planted bugs",
+      "17"
+    ]
+  },
+  {
+    "slide": 18,
+    "text": [
+      "IV. MEASUREMENT",
+      "Human-in-the-Loop as Supervisory Control",
+      "Control Theory Mapping                                                             Why Human Supervision Matters",
+      "\u25b8 Plant: the codebase + CI pipeline                                                \u25b8 The controller is stochastic: identical inputs may",
+      "\u25b8 Controller: AI agent (non-linear, stochastic)                                    produce different outputs",
+      "\u25b8 Sensor: test suites, linters, gate output                                        \u25b8 No Lyapunov function exists for LLM reasoning (stability",
+      "is not provable)",
+      "\u25b8 Actuator: git push, MR creation                                                  \u25b8 Test suites are incomplete sensors (cannot observe all",
+      "\u25b8 Supervisor: human reviewer (override authority)                                  state)",
+      "\u25b8 Reference signal: correct, secure, passing code                                  \u25b8 Human acts as a bounded-rationality supervisor with",
+      "override authority",
+      "\u25b8 The merge button is a hard gate, not a suggestion",
+      "18"
+    ]
+  },
+  {
+    "slide": 19,
+    "text": [
+      "V. EVIDENCE",
+      "Production Evidence at Scale",
+      "Case Study: Red Hat Agentic Ecosystems production data (2025-2026)",
+      "100+                                        7                                15+                                        5",
+      "MRs merged                             Production                           Maintained                           Engineers on",
+      "per week                             workflows                              projects                             the squad",
+      "Workflows: Autofix (triage + fix), Code Review, Knowledge Sync, Package Onboarding (CPU/CUDA/ROCm/Gaudi/TPU/Neuron/Spyre),",
+      "Pipeline Failure Analyzer, RFE Assessor, Security Alerts. Zero security incidents from agent-generated code to date.",
+      "19"
+    ]
+  },
+  {
+    "slide": 20,
+    "text": [
+      "V. OPEN PROBLEMS",
+      "Open Research Problems",
+      "Formal Verification of Agent Behavior",
+      "Can we develop tractable verification for bounded agent traces? Partial verification of finite tool-call sequences may be feasible even if",
+      "general verification is not.",
+      "Prompt Injection Defenses",
+      "No complete defense exists. Research directions: instruction hierarchy enforcement, data tainting through attention layers, formal separation",
+      "of instruction and data channels in transformer architectures.",
+      "Alignment in CI/CD",
+      "Agent 'values' are shaped by training data and prompts. How do you align agent behavior with organizational security policies when those",
+      "policies can't be fully specified in natural language?",
+      "Optimal Human-Agent Task Allocation",
+      "Which tasks should be delegated and which kept human? Current allocation is heuristic. We lack formal frameworks for delegation decisions",
+      "under uncertainty.",
+      "20"
+    ]
+  },
+  {
+    "slide": 21,
+    "text": [
+      "Key Takeaways",
+      "\u25b8 AI agents are confused deputies: ambient authority + untrusted input",
+      "\u25b8 Prompt injection is fundamentally different from prior injection classes",
+      "\u25b8 Kernel-level containment is the only trustworthy security boundary",
+      "\u25b8 Non-determinism requires statistical thinking, not deterministic proofs",
+      "\u25b8 Human-in-the-loop is supervisory control, not a crutch",
+      "\u25b8 The defense stack must be ordered by enforceability, not convenience",
+      "\u25b8 Measure displaced effort, not output volume",
+      "21"
+    ]
+  },
+  {
+    "slide": 22,
+    "text": [
+      "Questions?                                                                linkedin.com/company/red-hat",
+      "youtube.com/@redhat",
+      "Andre Lustosa, PhD | alustosa@redhat.com",
+      "https://www.redhat.com/en/products/ai",
+      "facebook.com/redhat",
+      "x.com/RedHat",
+      "22"
+    ]
+  }
+]

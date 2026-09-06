@@ -1,0 +1,67 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import type { Lecture } from '../lib/lectures';
+import { lectureRoute } from '../lib/lectures';
+
+interface Props {
+  lecture: Lecture;
+  description?: string;
+}
+
+const { lecture, description } = Astro.props;
+---
+
+<BaseLayout
+  title={`${lecture.title} · Presenter view`}
+  description={description ?? `Presenter notes for ${lecture.title}.`}
+  canonicalPath={Astro.url.pathname}
+  noindex
+  chrome="presenter"
+>
+  <div class="presenter-page">
+    <div class="shell presenter-shell">
+      <header class="presenter-topbar">
+        <a href={lectureRoute(lecture, 'original')}>← Original slide window</a>
+        <p>Presenter view · {lecture.event} · {lecture.date}</p>
+      </header>
+      <slot />
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .presenter-page {
+    min-height: 100vh;
+    background: var(--bg);
+  }
+
+  .presenter-shell {
+    padding-block: 1rem 3rem;
+  }
+
+  .presenter-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--rule);
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+
+  .presenter-topbar a {
+    text-decoration: none;
+  }
+
+  .presenter-topbar p {
+    margin: 0;
+  }
+
+  @media (max-width: 640px) {
+    .presenter-topbar {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+</style>

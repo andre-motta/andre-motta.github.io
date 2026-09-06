@@ -1,0 +1,99 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { lecture } from '../data/lecture';
+import { isLectureAvailable, lectureRoute } from '../lib/lectures';
+
+const talksVisible = isLectureAvailable(lecture);
+---
+<BaseLayout title="Talks" description="Talks and lecture materials by Andre Lustosa." canonicalPath="/talks.html" noindex={!talksVisible}>
+  <article class="page-shell talks-index" data-draft={talksVisible && lecture.draft ? 'true' : undefined}>
+    <header class="page-header">
+      <p class="eyebrow">ANDRE LUSTOSA / TALKS</p>
+      <h1 class="page-title">Lecture materials.</h1>
+      <p class="page-intro">Original presentations and companion reading versions from talks by Andre Lustosa.</p>
+    </header>
+
+    {talksVisible ? (
+      <section class="talk-list" aria-labelledby="talk-list-heading">
+        <div class="section-heading">
+          <div>
+            <p class="section-label">01 / Available</p>
+            <h2 class="section-title" id="talk-list-heading">{lecture.event}</h2>
+          </div>
+          <p class="meta">{lecture.date}</p>
+        </div>
+        <article class="talk-item">
+          <p class="talk-kicker">{lecture.subtitle}</p>
+          <h3><a href={lectureRoute(lecture, 'chooser')}>{lecture.title}</a></h3>
+          <p>Choose the original presentation, read the companion article, or compare the website styled HTML slides.</p>
+          <a class="talk-link" href={lectureRoute(lecture, 'chooser')}>Open lecture materials <span aria-hidden="true">→</span></a>
+        </article>
+      </section>
+    ) : (
+      <p class="empty-state">No public talks are available yet.</p>
+    )}
+  </article>
+</BaseLayout>
+
+<style>
+  .talks-index {
+    padding-block: clamp(4.5rem, 10vw, 8rem) 4rem;
+  }
+
+  .talk-list {
+    margin-top: clamp(4rem, 8vw, 7rem);
+  }
+
+  .talk-item {
+    max-width: 48rem;
+    padding-block: 2rem 2.5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .talk-kicker {
+    margin: 0;
+    color: var(--accent);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .talk-item h3 {
+    margin: 0.65rem 0 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: 400;
+    letter-spacing: -0.05em;
+    line-height: 0.98;
+  }
+
+  .talk-item h3 a {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .talk-item h3 a:hover {
+    color: var(--accent);
+  }
+
+  .talk-item > p:not(.talk-kicker) {
+    max-width: 45ch;
+    margin: 1rem 0 0;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+
+  .talk-link {
+    display: inline-block;
+    margin-top: 1.75rem;
+    font-size: 0.9rem;
+    font-weight: 650;
+  }
+
+  @media (max-width: 700px) {
+    .section-heading {
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+    }
+  }
+</style>

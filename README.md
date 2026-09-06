@@ -63,6 +63,22 @@ and link public upstream work accurately, and generalize internal Red Hat work
 without identifiable details. Keep private research out of tracked files and site artifacts; the ignored
 `.wiki/` preserves local context for agents.
 
+## Talks and presentation materials
+
+`/talks.html` indexes lectures. The NCSU lecture offers the original branded
+slides, an HTML presentation with identical content, and an in-depth article.
+The slide controls also open a separate presenter window with synchronized
+notes and navigation. The presenter page has no regular site navigation and is
+excluded from discovery indexes; the standalone notes PDF has an unlisted URL.
+
+Reviewed slide images, PDFs, transcript, and presenter cues live in
+`presentation-assets/`, outside Astro's automatic static copying. Explicit
+routes emit the approved artifacts. Draft lectures use ignored local derivatives
+and the shared preview gate. Source PowerPoint files, authoring documents, raw
+notes, and private research are not build inputs. See
+[the lecture work record](docs/work/ncsu-ai-agents-lecture.md) for routes,
+preparation, synchronization behavior, approvals, and verification commands.
+
 ## CV
 
 `andre-motta/personal_cv` remains the source of truth. The build imports its

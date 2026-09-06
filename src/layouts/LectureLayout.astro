@@ -1,0 +1,107 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import type { Lecture } from '../lib/lectures';
+import { lectureRoute } from '../lib/lectures';
+
+interface Props {
+  lecture: Lecture;
+  variant: 'chooser' | 'original' | 'web';
+  description?: string;
+}
+
+const { lecture, variant, description } = Astro.props;
+const variantName = variant === 'chooser' ? 'Lecture materials' : variant === 'original' ? 'Original slide deck' : 'HTML slides';
+const pageTitle = variant === 'chooser' ? lecture.title : `${lecture.title} · ${variantName}`;
+const pageDescription = description ?? `${lecture.title}: ${lecture.subtitle}. ${lecture.event}, ${lecture.date}.`;
+const routeLinks = [
+  { label: 'Chooser', href: lectureRoute(lecture, 'chooser'), current: variant === 'chooser' },
+  { label: 'Original deck', href: lectureRoute(lecture, 'original'), current: variant === 'original' },
+  { label: 'HTML slides', href: lectureRoute(lecture, 'web'), current: variant === 'web' },
+];
+---
+
+<BaseLayout title={pageTitle} description={pageDescription} canonicalPath={Astro.url.pathname} noindex={lecture.draft}>
+  <div class="lecture-page" data-draft={String(lecture.draft)}>
+    <div class="shell lecture-shell">
+      <nav class="lecture-nav" aria-label="Lecture navigation">
+        <a class="lecture-back" href="/talks.html">← Talks</a>
+        <div class="lecture-variants">
+          {routeLinks.map((link) => (
+            <a href={link.href} aria-current={link.current ? 'page' : undefined}>{link.label}</a>
+          ))}
+        </div>
+      </nav>
+      {lecture.draft && <p class="lecture-draft-badge">Local draft preview</p>}
+      <slot />
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .lecture-shell {
+    padding-block: 2rem 6rem;
+  }
+
+  .lecture-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--rule);
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+
+  .lecture-back,
+  .lecture-variants a {
+    text-decoration: none;
+  }
+
+  .lecture-back:hover,
+  .lecture-variants a:hover,
+  .lecture-variants a[aria-current='page'] {
+    color: var(--text);
+  }
+
+  .lecture-variants {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: end;
+    gap: 0.35rem 1.25rem;
+  }
+
+  .lecture-draft-badge {
+    width: fit-content;
+    margin: 1rem 0 -1rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 640px) {
+    .lecture-nav {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .lecture-variants {
+      justify-content: start;
+    }
+  }
+
+  @media print {
+    .lecture-shell {
+      width: 100%;
+      padding: 0;
+    }
+
+    .lecture-nav {
+      display: none;
+    }
+  }
+</style>

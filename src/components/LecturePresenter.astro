@@ -1,0 +1,703 @@
+---
+import type { Lecture, PresenterCue } from '../lib/lectures';
+import { lectureSlideCount, lectureSlideUrl } from '../lib/lectures';
+
+interface Props {
+  lecture: Lecture;
+  cues: PresenterCue[];
+}
+
+const { lecture, cues } = Astro.props;
+const total = lectureSlideCount(lecture);
+const cumulativeMinutes = cues.reduce<number[]>((values, cue, index) => {
+  values.push((values[index - 1] ?? 0) + cue.minutes);
+  return values;
+}, []);
+const formatDuration = (minutes: number) => {
+  const seconds = Math.max(0, Math.round(minutes * 60));
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+};
+---
+
+<section
+  class="presenter-app"
+  data-presenter-app
+  data-lecture-slug={lecture.slug}
+  data-default-mode="original"
+  data-total={total}
+  aria-labelledby="presenter-title"
+>
+  <span hidden id="mode=original&slide=1"></span>
+  <span hidden id="mode=web&slide=1"></span>
+  <header class="presenter-header">
+    <div>
+      <p class="section-label">Presenter notes</p>
+      <h1 id="presenter-title">{lecture.title}</h1>
+      <p class="presenter-subtitle" data-presenter-deck>Original deck</p>
+    </div>
+    <div class="presenter-timer" aria-label="Elapsed presentation time">
+      <span class="presenter-timer-label">Elapsed</span>
+      <strong data-presenter-timer>00:00:00</strong>
+    </div>
+  </header>
+
+  <p class="presenter-instruction">Move this presenter window to your laptop screen, then fullscreen the slide window.</p>
+
+  <div class="presenter-controls" data-presenter-controls aria-label="Presenter controls">
+    <button type="button" data-presenter-previous>← Previous</button>
+    <span class="presenter-counter"><span data-presenter-number>1</span> / {total}</span>
+    <button type="button" data-presenter-next>Next →</button>
+    <button type="button" data-presenter-first>First</button>
+    <button type="button" data-presenter-last>Last</button>
+    <span class="presenter-control-divider" aria-hidden="true"></span>
+    <button type="button" data-timer-start>Start</button>
+    <button type="button" data-timer-pause>Pause</button>
+    <button type="button" data-timer-reset>Reset</button>
+  </div>
+
+  <p class="presenter-connection" data-presenter-connection aria-live="polite">Standalone presenter notes. Use local controls.</p>
+
+  <div class="presenter-slide-list" data-presenter-slide-list>
+    {cues.map((cue, index) => {
+      const nextCue = cues[index + 1];
+      const cumulative = cumulativeMinutes[index] ?? cue.minutes;
+      return (
+        <article class="presenter-slide" data-presenter-slide={cue.number} id={`presenter-slide-${cue.number}`} tabindex="-1" aria-label={`Presenter notes for slide ${cue.number} of ${total}`}>
+          <header class="presenter-slide-header">
+            <div>
+              <p class="presenter-slide-kicker">Slide {cue.number} / {total}</p>
+              <h2>{cue.title}</h2>
+            </div>
+            <p class="presenter-allocation">{formatDuration(cue.minutes)} allocated · target {formatDuration(cumulative - cue.minutes)}–{formatDuration(cumulative)}</p>
+          </header>
+
+          <section class="presenter-main-point" aria-labelledby={`presenter-main-${cue.number}`}>
+            <p class="presenter-label" id={`presenter-main-${cue.number}`}>Main point</p>
+            <p>{cue.mainPoint}</p>
+          </section>
+
+          <div class="presenter-notes-grid">
+            <section class="presenter-cues" aria-labelledby={`presenter-cues-${cue.number}`}>
+              <h3 id={`presenter-cues-${cue.number}`}>Speaking cues</h3>
+              <ol>
+                {cue.cues.map((item) => <li>{item}</li>)}
+              </ol>
+            </section>
+            <aside class="presenter-qualification" aria-labelledby={`presenter-qualification-${cue.number}`}>
+              <h3 id={`presenter-qualification-${cue.number}`}>Qualification</h3>
+              <p>{cue.qualification}</p>
+              <h3 id={`presenter-transition-${cue.number}`}>Transition</h3>
+              <p>{cue.transition}</p>
+              <a href={cue.articleSection.href} target="_blank" rel="noopener">Article: {cue.articleSection.title} <span aria-hidden="true">↗</span></a>
+            </aside>
+          </div>
+
+          <div class="presenter-source-row">
+            <figure class="presenter-source">
+              <img src={lectureSlideUrl(lecture, cue.number)} alt={`Original source slide ${cue.number} of ${total}`} width="1920" height="1082" loading={cue.number === 1 ? 'eager' : 'lazy'} decoding="async" />
+              <figcaption>Original source slide {cue.number}</figcaption>
+            </figure>
+            {nextCue && (
+              <figure class="presenter-source presenter-source-next">
+                <img src={lectureSlideUrl(lecture, nextCue.number)} alt={`Original source slide ${nextCue.number} of ${total}`} width="1920" height="1082" loading="lazy" decoding="async" />
+                <figcaption>Original source slide {nextCue.number} · next</figcaption>
+              </figure>
+            )}
+          </div>
+        </article>
+      );
+    })}
+  </div>
+</section>
+
+<style>
+  .presenter-app {
+    padding-block: 0.75rem 2rem;
+  }
+
+  .presenter-header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .presenter-header h1 {
+    max-width: 30ch;
+    margin: 0.25rem 0 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(1.1rem, 2.4vw, 2rem);
+    font-weight: 400;
+    letter-spacing: -0.055em;
+    line-height: 1.05;
+  }
+
+  .presenter-subtitle {
+    margin: 0.25rem 0 0;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .presenter-timer {
+    min-width: 8rem;
+    padding: 0.45rem 0.65rem;
+    border: 1px solid var(--accent);
+    text-align: right;
+  }
+
+  .presenter-timer-label,
+  .presenter-label,
+  .presenter-slide-kicker {
+    display: block;
+    color: var(--accent);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.7rem;
+    font-weight: 650;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  .presenter-timer strong {
+    display: block;
+    margin-top: 0.2rem;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 1.1rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .presenter-instruction {
+    max-width: 60ch;
+    margin: 0.55rem 0 0;
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+
+  .presenter-controls {
+    display: none;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.65rem;
+  }
+
+  .presenter-app.js-enabled .presenter-controls {
+    display: flex;
+  }
+
+  .presenter-controls button {
+    min-height: 2.1rem;
+    padding: 0.3rem 0.55rem;
+    border: 1px solid var(--rule);
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.82rem;
+  }
+
+  .presenter-controls button:hover {
+    border-color: var(--text);
+  }
+
+  .presenter-controls button:disabled {
+    cursor: default;
+    opacity: 0.45;
+  }
+
+  .presenter-counter {
+    min-width: 4rem;
+    color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+
+  .presenter-control-divider {
+    width: 1px;
+    height: 1.6rem;
+    margin-inline: 0.3rem;
+    background: var(--rule);
+  }
+
+  .presenter-connection {
+    min-height: 1rem;
+    margin: 0.45rem 0 0;
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+
+  .presenter-slide-list {
+    display: grid;
+    gap: 1rem;
+    margin-top: 0.75rem;
+  }
+
+  .presenter-app.js-enabled .presenter-slide:not([data-current]) {
+    display: none;
+  }
+
+  .presenter-slide {
+    min-width: 0;
+    padding: clamp(0.85rem, 2vw, 1.4rem);
+    border: 1px solid var(--rule);
+    background: var(--surface);
+  }
+
+  .presenter-slide-header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .presenter-slide-kicker {
+    margin: 0;
+  }
+
+  .presenter-slide h2 {
+    max-width: 28ch;
+    margin: 0.45rem 0 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(1.35rem, 2.7vw, 2.3rem);
+    font-weight: 400;
+    letter-spacing: -0.045em;
+    line-height: 1;
+  }
+
+  .presenter-allocation {
+    flex: 0 0 auto;
+    margin: 0;
+    color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.76rem;
+    text-align: right;
+  }
+
+  .presenter-main-point {
+    max-width: 68ch;
+    margin-top: 1rem;
+  }
+
+  .presenter-main-point p:last-child {
+    margin: 0.45rem 0 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(1.15rem, 2.1vw, 1.65rem);
+    line-height: 1.18;
+  }
+
+  .presenter-notes-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(11rem, 0.7fr);
+    gap: 1.25rem;
+    margin-top: 1.1rem;
+  }
+
+  .presenter-cues,
+  .presenter-qualification {
+    min-width: 0;
+  }
+
+  .presenter-cues h3,
+  .presenter-qualification h3 {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .presenter-cues ol {
+    display: grid;
+    gap: 0.55rem;
+    margin: 0.65rem 0 0;
+    padding-left: 1.4rem;
+  }
+
+  .presenter-cues li,
+  .presenter-qualification p {
+    margin: 0;
+    color: var(--text);
+    font-size: 1rem;
+    line-height: 1.35;
+  }
+
+  .presenter-qualification {
+    padding-left: 1.25rem;
+    border-left: 2px solid var(--accent);
+  }
+
+  .presenter-qualification h3:nth-of-type(2) {
+    margin-top: 1rem;
+  }
+
+  .presenter-qualification p {
+    margin-top: 0.5rem;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  .presenter-qualification a {
+    display: inline-block;
+    margin-top: 0.9rem;
+    font-size: 0.82rem;
+  }
+
+  .presenter-source-row {
+    display: flex;
+    gap: 0.65rem;
+    margin-top: 1.1rem;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .presenter-source {
+    width: 100%;
+    margin: 0;
+  }
+
+  .presenter-source img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--rule);
+    background: #eeede9;
+  }
+
+  .presenter-source figcaption {
+    margin-top: 0.4rem;
+    color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.7rem;
+  }
+
+  @media (max-width: 760px) {
+    .presenter-header,
+    .presenter-slide-header {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .presenter-timer {
+      text-align: left;
+    }
+
+    .presenter-notes-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .presenter-qualification {
+      padding-top: 1rem;
+      padding-left: 0;
+      border-top: 2px solid var(--accent);
+      border-left: 0;
+    }
+
+    .presenter-source {
+      width: 50%;
+    }
+
+    .presenter-source-row {
+      padding-top: 1rem;
+      border-top: 1px solid var(--rule);
+    }
+  }
+
+  @media (min-width: 761px) {
+    .presenter-slide {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(12rem, 17rem);
+      column-gap: 1.5rem;
+      row-gap: 0;
+    }
+
+    .presenter-slide-header,
+    .presenter-main-point {
+      grid-column: 1 / -1;
+    }
+
+    .presenter-notes-grid {
+      grid-column: 1;
+      grid-template-columns: minmax(0, 1.35fr) minmax(10rem, 0.65fr);
+    }
+
+    .presenter-source-row {
+      grid-column: 2;
+      grid-row: 3;
+      display: grid;
+      align-content: start;
+      width: 100%;
+    }
+  }
+
+  @media print {
+    .presenter-topbar,
+    .presenter-instruction,
+    .presenter-controls,
+    .presenter-connection {
+      display: none;
+    }
+
+    .presenter-slide:not(:last-child) {
+      break-after: page;
+    }
+  }
+</style>
+
+<script>
+  import {
+    PRESENTER_PROTOCOL_VERSION,
+    presenterChannelName,
+    presenterFragment,
+    parsePresenterFragment,
+    parsePresenterMessage,
+    validSlide,
+    type PresenterCommandMessage,
+    type PresenterMode,
+  } from '../scripts/lecture-presenter-protocol';
+
+  const app = document.querySelector<HTMLElement>('[data-presenter-app]');
+
+  if (app) {
+    const slug = app.dataset.lectureSlug || 'lecture';
+    const total = Number(app.dataset.total) || 1;
+    const defaultMode = (app.dataset.defaultMode === 'web' ? 'web' : 'original') as PresenterMode;
+    const slides = Array.from(app.querySelectorAll<HTMLElement>('[data-presenter-slide]'));
+    const previous = app.querySelector<HTMLButtonElement>('[data-presenter-previous]');
+    const next = app.querySelector<HTMLButtonElement>('[data-presenter-next]');
+    const first = app.querySelector<HTMLButtonElement>('[data-presenter-first]');
+    const last = app.querySelector<HTMLButtonElement>('[data-presenter-last]');
+    const numberLabel = app.querySelector<HTMLElement>('[data-presenter-number]');
+    const connection = app.querySelector<HTMLElement>('[data-presenter-connection]');
+    const deckLabel = app.querySelector<HTMLElement>('[data-presenter-deck]');
+    const timerLabel = app.querySelector<HTMLElement>('[data-presenter-timer]');
+    const timerStart = app.querySelector<HTMLButtonElement>('[data-timer-start]');
+    const timerPause = app.querySelector<HTMLButtonElement>('[data-timer-pause]');
+    const timerReset = app.querySelector<HTMLButtonElement>('[data-timer-reset]');
+    const parsedFragment = parsePresenterFragment(window.location.hash);
+    const mode = parsedFragment?.mode ?? defaultMode;
+    const session = parsedFragment?.session;
+    let current = Math.max(1, Math.min(total, parsedFragment?.slide ?? 1));
+    let channel: BroadcastChannel | null = null;
+    let connected = false;
+    let lastStateSequence = -1;
+    let commandSequence = 0;
+    let heartbeatAt = Date.now();
+    let heartbeatWatch: number | null = null;
+    let timerInterval: number | null = null;
+    let timerElapsed = 0;
+    let timerStartedAt: number | null = null;
+    const timerKey = `lecture-presenter-timer:${slug}:${mode}:${session ?? 'standalone'}`;
+
+    const setConnection = (message: string) => {
+      if (connection) connection.textContent = message;
+    };
+
+    const updateHash = () => {
+      window.history.replaceState({}, '', `${window.location.pathname}${window.location.search}${presenterFragment({ session, mode, slide: current })}`);
+    };
+
+    const setSlide = (value: number, remote = false) => {
+      if (!validSlide(value, total)) return;
+      const changed = value !== current;
+      const outgoingSlide = slides.find((slide) => Number(slide.dataset.presenterSlide) === current);
+      const focusSlide = outgoingSlide?.contains(document.activeElement) ?? false;
+      current = value;
+      slides.forEach((slide) => {
+        const active = Number(slide.dataset.presenterSlide) === current;
+        slide.toggleAttribute('data-current', active);
+        slide.setAttribute('aria-hidden', String(!active));
+      });
+      numberLabel && (numberLabel.textContent = String(current));
+      if (previous) previous.disabled = current <= 1;
+      if (next) next.disabled = current >= total;
+      if (first) first.disabled = current <= 1;
+      if (last) last.disabled = current >= total;
+      updateHash();
+      if (remote) setConnection('Connected to the slide window.');
+      if (focusSlide && changed) slides.find((slide) => Number(slide.dataset.presenterSlide) === current)?.focus({ preventScroll: true });
+    };
+
+    const becomeStandalone = (reason: string) => {
+      if (heartbeatWatch !== null) window.clearInterval(heartbeatWatch);
+      heartbeatWatch = null;
+      channel?.close();
+      channel = null;
+      connected = false;
+      setConnection(reason);
+    };
+
+    const requestReconnect = () => {
+      if (!channel || !session) return;
+      try {
+        channel.postMessage({ version: PRESENTER_PROTOCOL_VERSION, type: 'ready', session, mode });
+        heartbeatAt = Date.now();
+      } catch {
+        becomeStandalone('The slide window connection ended. Presenter view is now standalone.');
+      }
+    };
+
+    const sendCommand = (command: PresenterCommandMessage['command']) => {
+      if (channel && session) {
+        commandSequence += 1;
+        try {
+          channel.postMessage({
+            version: PRESENTER_PROTOCOL_VERSION,
+            type: 'command',
+            command,
+            session,
+            mode,
+            sequence: commandSequence,
+          });
+          setConnection(connected ? 'Waiting for the slide window.' : 'Connection delayed; waiting for the slide window.');
+        } catch {
+          becomeStandalone('The slide window connection ended. Presenter view is now standalone.');
+        }
+        return;
+      }
+      if (command === 'previous') setSlide(Math.max(1, current - 1));
+      else if (command === 'next') setSlide(Math.min(total, current + 1));
+      else if (command === 'first') setSlide(1);
+      else if (command === 'last') setSlide(total);
+    };
+
+    const readTimer = () => {
+      try {
+        const value: unknown = JSON.parse(sessionStorage.getItem(timerKey) || 'null');
+        if (!value || typeof value !== 'object') return;
+        const stored = value as Record<string, unknown>;
+        if (stored.version !== 1 || stored.slug !== slug || stored.mode !== mode || typeof stored.elapsed !== 'number' || !Number.isFinite(stored.elapsed) || stored.elapsed < 0 || stored.elapsed > 864000 || (stored.startedAt !== null && (typeof stored.startedAt !== 'number' || !Number.isFinite(stored.startedAt) || stored.startedAt < 0 || stored.startedAt > Date.now() + 5000))) return;
+        timerElapsed = stored.elapsed;
+        timerStartedAt = stored.startedAt as number | null;
+      } catch {
+        // Timer persistence is optional when session storage is unavailable.
+      }
+    };
+
+    const currentElapsed = () => timerStartedAt === null ? timerElapsed : timerElapsed + (Date.now() - timerStartedAt) / 1000;
+    const formatElapsed = (seconds: number) => {
+      const whole = Math.max(0, Math.floor(seconds));
+      const hours = Math.floor(whole / 3600);
+      const minutes = Math.floor((whole % 3600) / 60);
+      const remainder = whole % 60;
+      return [hours, minutes, remainder].map((value) => String(value).padStart(2, '0')).join(':');
+    };
+    const persistTimer = () => {
+      try {
+        sessionStorage.setItem(timerKey, JSON.stringify({ version: 1, slug, mode, elapsed: timerElapsed, startedAt: timerStartedAt }));
+      } catch {
+        // Timer persistence is optional when session storage is unavailable.
+      }
+    };
+    const renderTimer = (persist = false) => {
+      timerLabel && (timerLabel.textContent = formatElapsed(currentElapsed()));
+      if (persist) persistTimer();
+    };
+    const startTimer = () => {
+      if (timerStartedAt === null) timerStartedAt = Date.now();
+      if (timerInterval === null) timerInterval = window.setInterval(renderTimer, 250);
+      renderTimer(true);
+    };
+    const pauseTimer = () => {
+      timerElapsed = currentElapsed();
+      timerStartedAt = null;
+      if (timerInterval !== null) window.clearInterval(timerInterval);
+      timerInterval = null;
+      renderTimer(true);
+    };
+    const resetTimer = () => {
+      timerElapsed = 0;
+      timerStartedAt = null;
+      if (timerInterval !== null) window.clearInterval(timerInterval);
+      timerInterval = null;
+      renderTimer(true);
+    };
+
+    app.classList.add('js-enabled');
+    setSlide(current);
+    deckLabel && (deckLabel.textContent = mode === 'web' ? 'HTML slides' : 'Original deck');
+    readTimer();
+    renderTimer();
+    if (timerStartedAt !== null) startTimer();
+    timerStart?.addEventListener('click', startTimer);
+    timerPause?.addEventListener('click', pauseTimer);
+    timerReset?.addEventListener('click', resetTimer);
+    previous?.addEventListener('click', () => sendCommand('previous'));
+    next?.addEventListener('click', () => sendCommand('next'));
+    first?.addEventListener('click', () => sendCommand('first'));
+    last?.addEventListener('click', () => sendCommand('last'));
+
+    if (session && typeof BroadcastChannel !== 'undefined') {
+      try {
+        channel = new BroadcastChannel(presenterChannelName(slug, mode, session));
+        connected = true;
+        setConnection('Connecting to the slide window.');
+        channel.addEventListener('message', (event: MessageEvent<unknown>) => {
+          if (!channel || !session) return;
+          const message = parsePresenterMessage(event.data, { session, mode });
+          if (!message) return;
+          heartbeatAt = Date.now();
+          if (message.type === 'ended') {
+            becomeStandalone('The slide window ended. Presenter view is now standalone.');
+          } else if (message.type === 'state' || message.type === 'heartbeat') {
+            connected = true;
+            setConnection('Connected to the slide window.');
+            if (message.sequence > lastStateSequence) {
+              lastStateSequence = message.sequence;
+              setSlide(message.slide, true);
+            }
+          }
+        });
+        channel.postMessage({ version: PRESENTER_PROTOCOL_VERSION, type: 'ready', session, mode });
+        heartbeatWatch = window.setInterval(() => {
+          if (Date.now() - heartbeatAt <= 6000) return;
+          if (window.opener?.closed === true) {
+            becomeStandalone('The slide window ended. Presenter view is now standalone.');
+            return;
+          }
+          connected = false;
+          setConnection('Connection delayed; waiting for the slide window.');
+          requestReconnect();
+        }, 1000);
+      } catch {
+        becomeStandalone('BroadcastChannel is unavailable. Presenter view is standalone.');
+      }
+    } else if (session) {
+      setConnection('BroadcastChannel is unavailable. Presenter view is standalone.');
+    }
+
+    window.addEventListener('pageshow', requestReconnect);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) requestReconnect();
+    });
+
+    const editableTarget = (target: EventTarget | null) => target instanceof HTMLElement && Boolean(target.closest('input,textarea,select,[contenteditable="true"]'));
+    const ownsSpace = (target: EventTarget | null) => target instanceof HTMLElement && Boolean(target.closest('a,button,summary'));
+    document.addEventListener('keydown', (event) => {
+      if (event.ctrlKey || event.metaKey || event.altKey || editableTarget(event.target) || (event.key === ' ' && ownsSpace(event.target))) return;
+      if (event.key === 'ArrowLeft' || event.key === 'PageUp' || (event.key === ' ' && event.shiftKey)) {
+        event.preventDefault();
+        sendCommand('previous');
+      } else if (event.key === 'ArrowRight' || event.key === 'PageDown' || (event.key === ' ' && !event.shiftKey)) {
+        event.preventDefault();
+        sendCommand('next');
+      } else if (event.key === 'Home') {
+        event.preventDefault();
+        sendCommand('first');
+      } else if (event.key === 'End') {
+        event.preventDefault();
+        sendCommand('last');
+      }
+    });
+    window.addEventListener('pagehide', () => {
+      persistTimer();
+      if (heartbeatWatch !== null) window.clearInterval(heartbeatWatch);
+      if (timerInterval !== null) window.clearInterval(timerInterval);
+      channel?.close();
+    });
+  }
+</script>

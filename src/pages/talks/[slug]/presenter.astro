@@ -1,0 +1,22 @@
+---
+import LecturePresenter from '../../../components/LecturePresenter.astro';
+import PresenterLayout from '../../../layouts/PresenterLayout.astro';
+import { lecture } from '../../../data/lecture';
+import { isLectureAvailable, lectureSlideCount, readPresenterCues, requireLectureAsset } from '../../../lib/lectures';
+
+export async function getStaticPaths() {
+  if (!isLectureAvailable(lecture)) return [];
+  return [{ params: { slug: lecture.slug }, props: { lecture } }];
+}
+
+const { lecture: currentLecture } = Astro.props;
+const total = lectureSlideCount(currentLecture);
+for (let number = 1; number <= total; number += 1) {
+  requireLectureAsset(currentLecture, `slide-${String(number).padStart(2, '0')}.png`, 'slide image');
+}
+const cues = await readPresenterCues(currentLecture);
+---
+
+<PresenterLayout lecture={currentLecture} description={`Presenter notes for ${currentLecture.title}.`}>
+  <LecturePresenter lecture={currentLecture} cues={cues} />
+</PresenterLayout>
