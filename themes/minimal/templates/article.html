@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }} - {{ SITENAME }}{% endblock %}
+
+{% block description %}{{ article.summary }}{% endblock %}
+
+{% block content %}
+<article>
+    <header>
+        <span class="article-date">{{ article.date.strftime('%Y-%m-%d') }}</span>
+        <h1>{{ article.title }}</h1>
+    </header>
+
+    {{ article.content }}
+
+    {% if article.tags %}
+    <p>
+        {% for tag in article.tags %}
+            <a class="tag" href="{{ SITEURL }}/{{ tag.url }}">#{{ tag.name }}</a>
+        {% endfor %}
+    </p>
+    {% endif %}
+
+    <a class="back-link" href="{{ SITEURL }}/">&larr; Back to all posts</a>
+</article>
+{% endblock %}
