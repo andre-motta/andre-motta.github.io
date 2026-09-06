@@ -1,5 +1,11 @@
 output/
 /.wiki/
+# Share only this repository's LinkedIn skill, even with global agent ignores.
+!/.agents/
+/.agents/*
+!/.agents/skills/
+/.agents/skills/*
+!/.agents/skills/linkedin-posts/
 output-preview/
 dist/
 .generated/

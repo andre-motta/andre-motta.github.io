@@ -1,0 +1,4 @@
+interface:
+  display_name: "LinkedIn Posts"
+  short_description: "Turn site articles into posts in Andre’s voice"
+  default_prompt: "Use $linkedin-posts to draft a LinkedIn post from one of my website articles."

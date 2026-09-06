@@ -1,0 +1,32 @@
+---
+import MarkdownPageLayout from '../layouts/MarkdownPageLayout.astro';
+import profile from '../data/profile.json';
+---
+<MarkdownPageLayout title="Privacy" description="How this site measures usage and remembers your theme." kicker="ANDRE LUSTOSA / PRIVACY">
+  <h2>Site analytics</h2>
+  <p>
+    This site uses <a href="https://www.goatcounter.com/">GoatCounter</a> to
+    understand which pages people read and where visits come from. The tracker
+    runs on alustos.us, not in local development or draft previews.
+  </p>
+  <p>
+    GoatCounter receives pageview and referrer information and can derive browser,
+    device, language, screen-size, and approximate location statistics. Its
+    documented default is aggregate reporting without tracking cookies or
+    persistent visitor identifiers. It temporarily processes IP addresses and
+    browser information to distinguish visits. See{' '}
+    <a href="https://www.goatcounter.com/help/privacy">GoatCounter’s privacy policy</a>{' '}
+    for processing and retention details.
+  </p>
+  <p>
+    The site works when analytics is blocked or JavaScript is disabled. The
+    integration does not add session recording or advertising trackers.
+  </p>
+  <h2>Theme preference</h2>
+  <p>
+    Choosing a light or dark theme saves that preference in your browser’s local
+    storage. You can remove it by clearing this site’s browser data.
+  </p>
+  <h2>Questions</h2>
+  <p>Contact <a href={`mailto:${profile.email}`}>Andre Lustosa</a>.</p>
+</MarkdownPageLayout>

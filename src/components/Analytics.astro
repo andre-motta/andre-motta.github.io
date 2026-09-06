@@ -1,0 +1,32 @@
+---
+const shouldLoadAnalytics = import.meta.env.PROD && import.meta.env.MODE !== 'preview' && import.meta.env.INCLUDE_DRAFTS !== 'true';
+---
+{shouldLoadAnalytics && (
+  <script is:inline>
+    (() => {
+      const pageLocation = window.location;
+      if (
+        pageLocation.hostname !== 'alustos.us' ||
+        (pageLocation.host && pageLocation.host !== 'alustos.us') ||
+        pageLocation.protocol !== 'https:'
+      ) return;
+
+      const canonicalLink = document.querySelector('link[rel="canonical"]');
+      let path = pageLocation.pathname || '/';
+      try {
+        const canonicalHref = canonicalLink?.getAttribute('href');
+        if (canonicalHref) path = new URL(canonicalHref, pageLocation.origin).pathname || '/';
+      } catch {
+        // Keep the query-free pathname if a page has malformed canonical metadata.
+      }
+
+      const script = document.createElement('script');
+      script.setAttribute('data-goatcounter', 'https://alustosa.goatcounter.com/count');
+      script.setAttribute('src', 'https://gc.zgo.at/count.js');
+      script.setAttribute('async', '');
+      script.async = true;
+      script.setAttribute('data-goatcounter-settings', JSON.stringify({ path }));
+      document.head.appendChild(script);
+    })();
+  </script>
+)}

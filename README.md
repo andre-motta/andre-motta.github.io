@@ -121,6 +121,29 @@ project commands documented above when generating or checking the site.
 - `scripts/`: CV import, fixtures, and artifact validation
 - `docs/`: repository-only workflow and decision records
 
+## Discovery and LinkedIn writing
+
+GoatCounter pageview analytics uses the public `alustosa` account through
+`src/components/Analytics.astro`. The loader is omitted from development and draft
+preview builds and fetches the external script only on `https://alustos.us`.
+It reports the canonical pathname without query strings or fragments. The footer
+links to `/privacy.html`. No public counter or click events are configured.
+
+`/llms.txt` is built from public profile information and non-draft articles. It
+links to the canonical HTML pages and stays free of drafts even in local preview.
+`public/robots.txt` allows search and training crawlers and requests a ten-second
+delay from clients that support it. These files offer guidance, not traffic
+enforcement. See [the preparation record](docs/work/discovery-and-linkedin.md)
+for analytics setup and the separate hosting controls needed for abusive traffic.
+
+Use the repository-local
+[linkedin-posts skill](.agents/skills/linkedin-posts/SKILL.md) to prepare posts from
+articles, for example: `Use $linkedin-posts to draft a useful LinkedIn post from
+my latest article, with a link to the full piece.` It keeps drafting separate
+from external publication and uses the site's editorial voice. Private drafts
+and results belong in `.wiki/linkedin/`, outside the site artifact.
+
 ## License
 
-Content © Andre Lustosa.
+Original website content © Andre Lustosa, licensed under the
+[MIT License](public/license.txt). Third-party material retains its own license.

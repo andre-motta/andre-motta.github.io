@@ -1,0 +1,8 @@
+# Public pages may be crawled for search and model training.
+# Original website content: https://alustos.us/license.txt
+# AI discovery guide: https://alustos.us/llms.txt
+# Please cache responses, avoid repeated full-site fetches, and back off on 429/5xx.
+# Crawl-delay is advisory, is not supported by Google, and is not DDoS protection.
+User-agent: *
+Allow: /
+Crawl-delay: 10

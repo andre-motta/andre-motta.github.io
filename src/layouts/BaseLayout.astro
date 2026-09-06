@@ -1,5 +1,6 @@
 ---
 import profile from '../data/profile.json';
+import Analytics from '../components/Analytics.astro';
 import { absoluteUrl, cleanDescription, FEED_PATH } from '../lib/site';
 import '../styles/global.css';
 
@@ -36,7 +37,9 @@ const navigation = [
     {noindex && <meta name="robots" content="noindex, nofollow" />}
     <title>{pageTitle}</title>
     <link rel="canonical" href={canonical} />
+    <link rel="describedby" type="text/plain" href={absoluteUrl('/llms.txt')} />
     <link rel="alternate" type="application/atom+xml" title={`${profile.name} writing`} href={absoluteUrl(FEED_PATH)} />
+    <Analytics />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={metaDescription} />
     <meta property="og:type" content="website" />
@@ -89,6 +92,7 @@ const navigation = [
           {profile.links.map((link) => <a href={link.url}>{link.label}</a>)}
           <a href={`mailto:${profile.email}`}>Email</a>
           <a href={FEED_PATH}>RSS</a>
+          <a href="/privacy.html">Privacy</a>
         </div>
         <p class="footer-legal">© {new Date().getFullYear()} {profile.name}.</p>
       </div>

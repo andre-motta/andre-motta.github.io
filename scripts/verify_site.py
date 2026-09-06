@@ -20,6 +20,7 @@ REQUIRED_ROUTES = (
     "archives.html",
     "projects.html",
     "cv.html",
+    "privacy.html",
     "authors.html",
     "author/andre-lustosa.html",
     "categories.html",
@@ -30,6 +31,8 @@ REQUIRED_ROUTES = (
     "tag/meta.html",
     "feeds/all.atom.xml",
     "feeds/general.atom.xml",
+    "llms.txt",
+    "robots.txt",
 )
 FORBIDDEN_PATH_PARTS = {
     ".cv-source",
@@ -37,12 +40,19 @@ FORBIDDEN_PATH_PARTS = {
     ".wiki",
     "AGENTS.md",
     "README.md",
+    ".agents",
+    ".codex",
+    "SKILL.md",
     "content",
     "docs",
     "src",
 }
 SKIP_SCHEMES = {"http", "https", "mailto", "tel", "data"}
 REJECT_SCHEMES = {"javascript"}
+MARKDOWN_LINK_RE = re.compile(r"\[(?:\\.|[^\]\\])*\]\(\s*(?:<([^>]+)>|([^\s)]+))")
+SITE_HOST = "alustos.us"
+GOATCOUNTER_SCRIPT = "https://gc.zgo.at/count.js"
+GOATCOUNTER_ENDPOINT = "https://alustosa.goatcounter.com/count"
 
 
 class MarkupParser(HTMLParser):
@@ -215,6 +225,57 @@ def check_links(output: Path, files: list[Path], allow_missing_cv: bool, errors:
                     errors.append(f"missing fragment #{fragment} in {target.relative_to(output)}")
 
 
+def check_llms(output: Path, allow_missing_cv: bool, drafts: dict[str, str], errors: list[str]) -> None:
+    """Validate same-site Markdown links and public-only article discovery."""
+    llms = output / "llms.txt"
+    if not llms.is_file():
+        return
+
+    text = llms.read_text(encoding="utf-8", errors="replace")
+    for match in MARKDOWN_LINK_RE.finditer(text):
+        link = (match.group(1) or match.group(2) or "").strip()
+        split = urlsplit(link)
+        internal = not split.scheme and not split.netloc
+        if split.netloc:
+            internal = split.netloc.lower() == SITE_HOST and split.scheme in {"http", "https"}
+            if internal and split.scheme != "https":
+                errors.append(f"llms.txt contains a non-canonical internal link: {link}")
+        if not internal:
+            continue
+
+        target_reference = split.path if split.scheme or split.netloc else link
+        try:
+            target = resolve_local_target(llms, target_reference, output)
+        except ValueError as error:
+            errors.append(f"invalid local link in llms.txt: {error}")
+            continue
+        if target is None or target.is_file():
+            continue
+        if allow_missing_cv and target == output / "extra" / "Andre_Motta_Resume.pdf":
+            continue
+        errors.append(f"broken local link in llms.txt: {link}")
+
+    for route, title in drafts.items():
+        escaped_title = title.replace("\\", "\\\\").replace("[", "\\[").replace("]", "\\]")
+        if route in text or title in text or escaped_title in text:
+            errors.append(f"llms.txt references non-public article content: /{route}")
+
+
+def check_analytics(output: Path, files: list[Path], preview: bool, errors: list[str]) -> None:
+    """Ensure analytics is present only in the canonical production artifact."""
+    html_files = [path for path in files if path.suffix == ".html"]
+    loader_pages = 0
+    for path in html_files:
+        text = path.read_text(encoding="utf-8", errors="replace")
+        has_script = GOATCOUNTER_SCRIPT in text or GOATCOUNTER_ENDPOINT in text
+        if preview and has_script:
+            errors.append(f"preview output contains GoatCounter analytics: {path.relative_to(output)}")
+        if not preview and GOATCOUNTER_SCRIPT in text and GOATCOUNTER_ENDPOINT in text:
+            loader_pages += 1
+    if not preview and html_files and loader_pages != len(html_files):
+        errors.append(f"production output has GoatCounter loader on {loader_pages} of {len(html_files)} HTML pages")
+
+
 def check_drafts(output: Path, files: list[Path], preview: bool, drafts: dict[str, str], errors: list[str]) -> None:
     draft_count = 0
     for path in files:
@@ -271,6 +332,8 @@ def main(argv: list[str] | None = None) -> int:
     check_cname(output, errors)
     check_cv(output, args.allow_missing_cv, errors)
     check_links(output, files, args.allow_missing_cv, errors)
+    check_llms(output, args.allow_missing_cv, drafts, errors)
+    check_analytics(output, files, args.preview, errors)
     check_drafts(output, files, args.preview, drafts, errors)
     if errors:
         print("site verification failed:", file=sys.stderr)
