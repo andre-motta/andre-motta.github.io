@@ -1,11 +1,8 @@
 output/
 /.wiki/
-# Share only this repository's LinkedIn skill, even with global agent ignores.
-!/.agents/
-/.agents/*
-!/.agents/skills/
-/.agents/skills/*
-!/.agents/skills/linkedin-posts/
+# Share only repository skills; local Claude Code settings stay private.
+/.claude/*
+!/.claude/skills/
 output-preview/
 dist/
 .generated/

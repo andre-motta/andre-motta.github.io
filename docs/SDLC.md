@@ -1,137 +1,86 @@
 # Website development workflow
 
-## Operating model
+This repository uses the `agent-sdlc` skill, version 0.2.3, with Claude Code.
+Andre is the CTO. The Claude Code session orchestrates and owns architecture,
+design, editorial review, and integration, as described in
+[CLAUDE.md](../CLAUDE.md). This file is the project profile the skill reads.
 
-Andre owns product goals and the personal facts and opinions published in his
-name. Astra is the architect, lead designer, content editor, and orchestrator.
-Sol on `high` supplies subarchitecture, security review, and research-intensive
-content writing. Luna on
-`xhigh` implements scoped engineering tasks. Exact model IDs and standing rules
-are in [AGENTS.md](../AGENTS.md).
+## Profile
 
-The normal flow is:
+| Setting | Value |
+| --- | --- |
+| Skill version | `agent-sdlc` 0.2.3 (workflow based) |
+| Tracker | GitHub Issues on `andre-motta/andre-motta.github.io`: one parent issue with a checklist per initiative, one issue per item, PRs or commits reference `Fixes #N`. Public-safe wording only. |
+| Dependency links | Dependabot PRs; see [DEPENDENCIES.md](DEPENDENCIES.md) |
+| Default branch, integration branch, upstream path | `master`. Integration branch `claude/<initiative>`. After Andre's sign-off, the orchestrator pushes directly to `master` (approved exception, below). |
+| Worktree root (outside the repo) | `../andre-motta.github.io.worktrees/`; checkpoint at `../andre-motta.github.io.worktrees/CHECKPOINT.md` |
+| Setup | `npm ci`, then the CV import below (or the fixture) |
+| Focused checks | `npm run check`; `python scripts/test_import_cv.py` when the importer changes; `git diff --check` |
+| Integrated checks | `npm run check && npm run build && python scripts/verify_site.py --output output`, plus the preview build and verifiers when drafts or lectures change, and `python scripts/verify_lecture.py` for lecture changes |
+| Local CI reproduction | What pull requests run: `npm ci && npm audit --audit-level=high && python scripts/test_import_cv.py && python scripts/import-cv.py --fixture --output .generated/cv.json && npm run check && npm run build && python scripts/verify_site.py --output output --allow-missing-cv` |
+| Required platforms | Linux with Node.js 22.12+ and Python 3.11+. Browser checks in current Chromium at desktop and 390px mobile widths. |
+| Default evidence level | `automated`. Visual changes add desktop and mobile screenshots, plus GIF/video for motion. |
+| Resource limits (`rules` arg) | See [Workflow rules](#workflow-rules) |
+| Upstream path and approved exceptions | Direct push to `master` after Andre's sign-off; no PR required |
+| Publication side effects | A push to `master` deploys production through `.github/workflows/site.yml` |
 
-```text
-Andre's goal
-    -> Astra: brief, architecture, design and editorial direction
-    -> Sol: technical investigation, work breakdown and acceptance criteria
-    -> Luna: implementation and focused verification
-    -> Sol: technical review and verification assessment
-    -> Astra: integrated design, content and release review
-    -> approved commit and authorized publication
-```
+Adoption: Andre approved migrating from the Codex-based 0.1.0 workflow on
+September 26, 2026. Reconciled rules:
 
-Astra can dispatch Luna directly for a well-defined task. Sol can coordinate Luna
-within an assigned subsystem. All work returns to Astra for integration. These
-are responsibilities, not a requirement to launch a new agent at every stage.
-Keep one concise work record for substantial initiatives; small changes can use
-the task conversation. Do not require separate documents or human approvals for
-each stage when the user's existing brief is sufficient.
+- The Astra, Sol, and Luna model roles are replaced by the Claude Code
+  orchestrator and the skill's `sdlc-engineer` and `sdlc-reviewer` roles. Agents
+  inherit the session model.
+- `docs/work/` initiative records are retired. Git and GitHub Issues are the
+  record; past records moved to the private wiki. Public operational knowledge
+  from them now lives in [LECTURES.md](LECTURES.md) and [DISCOVERY.md](DISCOVERY.md).
+- The skill defaults to no screenshots. This profile keeps desktop and mobile
+  screenshots, plus motion recordings, for visual changes.
+- The skill defaults to PRs for upstream changes. Andre approved direct pushes
+  to `master` once he signs off on a change. Dependabot and external
+  contributions still arrive as PRs.
+- Branches use `claude/<topic>` instead of `codex/<topic>`. `AGENTS.md` became
+  `CLAUDE.md`, and the LinkedIn skill moved to `.claude/skills/`.
 
-## 1. Frame the work
+## Lanes
 
-Astra turns the user's goal into a brief covering:
+Most work on this site is fast lane: an article edit, a copy fix, a dependency
+review, a small style fix. The orchestrator does it directly, runs the checks
+from the table below, shows the commit message, and pushes after sign-off.
 
-- Audience, intended outcome, scope, and explicit exclusions.
-- User journeys and content needs, including facts or assets still needed.
-- Constraints, acceptance criteria, and observable success measures.
-- Open decisions, assumptions, dependencies, and publication intent.
+Use the skill's workflow lifecycle (discover, design, deliver, review, accept)
+for multi-item or risky work: a new site section, routing or deployment changes,
+CV import changes, or several articles at once. Design starts with a thin slice
+Andre can preview locally.
 
-Inspect the current implementation before estimating or allocating work. If the
-goal is not yet supplied, establish process and record known context without
-inventing the site's future direction. Keep independent work moving while
-clarifying consequential unknowns.
+Articles follow the local website-content skill when present. Drafts stay
+`draft: true`; Andre approves each article individually. The orchestrator
+edits every delegated draft before Andre sees it.
 
-For larger initiatives, maintain `docs/work/<topic>.md` using the compact format
-below. Record only public-safe project information, since this repository is
-public. Update it when scope changes and at meaningful handoffs.
+## Workflow rules
 
-```markdown
-# <Initiative>
-
-## Brief
-Audience, outcome, scope, exclusions, constraints, acceptance criteria.
-
-## Decisions
-Architecture, design and editorial choices; rationale; open questions.
-
-## Work items
-Owner/model, allowed files, dependencies, acceptance criteria, status.
-
-## Evidence
-Commands and results, browser observations, review findings and resolution.
-
-## Release and handoff
-Git state, authorization, deployment result, remaining work, next action.
-```
-
-## 2. Define architecture, design, and content
-
-Astra owns information architecture, visual hierarchy, typography, spacing,
-navigation, responsive behavior, and editorial voice. Establish representative
-pages and content before scaling implementation. Astra reviews each result before the
-user performs final approval. Provide desktop/mobile screenshots and GIF/video
-evidence for any motion. Never mistake a local preview for publication approval. Design should make Andre's
-work and writing easy to understand and navigate.
-
-Sol investigates technical feasibility, build and hosting constraints, URL
-compatibility, maintenance cost, and failure modes. Return a recommendation with
-tradeoffs and a bounded implementation breakdown. Astra resolves decisions that
-span subsystems or change the user experience. Record significant stack, routing,
-or deployment decisions and migration consequences in the initiative record.
-
-For content, distinguish verified facts, author-provided opinions, and open
-questions. Cite sources for external factual claims when appropriate. Preserve
-the meaning of Andre's statements while improving structure and clarity. Keep
-new articles in `src/content/articles/` with `draft: true` until the user approves
-them. Use the explicit local preview to review drafts. Production routes, indexes,
-feeds, and assets must exclude them.
-
-## 3. Delegate implementation
-
-Use this assignment contract for Sol and Luna:
+Pass these as the workflows' `rules` argument:
 
 ```text
-Role / model / reasoning:
-Objective and user outcome:
-Read first: AGENTS.md, docs/SDLC.md, relevant brief and source files
-Decisions already made and constraints:
-Allowed files and areas outside scope:
-Dependencies and interface agreements:
-Acceptance criteria:
-Required verification:
-Return: changed files, rationale, evidence, unresolved concerns
-Git authority: no commit, push, checkout, merge, or reset; Astra coordinates Git
+- Read CLAUDE.md and docs/SDLC.md first. Never read, copy, or stage .wiki/ unless the assignment says so; never put its content in src/, public/, or output.
+- Never stage .cv-source/, .generated/, public/extra/Andre_Motta_Resume.pdf, output/, or output-preview/.
+- Do not change the approved design baseline, URLs, feed paths, or the CV URL outside the item spec.
+- New or changed articles keep draft: true unless the spec says Andre approved them.
+- No em dashes in prose or commit messages. Module-level Python imports.
+- Use npm ci, never npm install, unless the item changes dependencies.
+- Never push, open PRs, or touch remote branches. The orchestrator publishes.
+- Run one build at a time per worktree; builds are small, no other resource limits.
 ```
 
-Luna implements within the agreed scope and runs the applicable checks. Escalate
-design ambiguities to Sol or Astra instead of silently changing architecture.
-Sol reviews implementation and assigns concrete corrections back to Luna.
-
-Parallel assignments need disjoint file ownership and stable interfaces. Reserve
-an available slot for a worker before asking Sol to delegate. With four available
-slots, Astra plus one Sol plus up to two Luna agents is a possible allocation,
-not a fixed requirement. If capacity is full, queue work or reuse an agent. Stop
-or redirect obsolete assignments when the brief changes.
-
-## 4. Verify and review
-
-Luna supplies implementation evidence, Sol evaluates technical correctness, and
-Astra evaluates the integrated result against the brief. Reviewers inspect the
-diff and evidence, not just the agent summary. Record findings with affected
-files, user impact, and a concrete correction. Resolve material findings before
-declaring the work ready.
-
-Select checks by what changed:
+## Checks by change
 
 | Change | Expected evidence |
 | --- | --- |
-| Process or documentation only | Read for consistency; verify local links, commands, model settings, and Git rules; run `git diff --check`. No site build required when build inputs are unchanged. |
+| Process or documentation only | Read for consistency; verify local links, commands, and Git rules; run `git diff --check`. No site build required when build inputs are unchanged. |
 | Content | Review facts, voice, metadata, links, and rendered pages; build the site. |
-| Templates, styles, or behavior | Build; inspect representative desktop and mobile pages, keyboard navigation, focus, contrast, overflow, and links; exercise changed behavior. |
+| Templates, styles, or behavior | Build; inspect representative desktop and mobile pages, keyboard navigation, focus, contrast, overflow, and links; exercise changed behavior; screenshots. |
 | Configuration, dependencies, or deployment | Run relevant build/configuration checks; inspect generated paths, feeds, `CNAME`, and CV handling; assess credentials and deployment permissions. |
 
-Current setup and validation from the repository root:
+Setup and validation from the repository root:
 
 ```bash
 npm ci
@@ -142,12 +91,12 @@ npm run build
 python scripts/verify_site.py --output output
 ```
 
-Use `npm ci` with the committed-intended lockfile, not a floating dependency
-install. The CV adapter uses the Python standard library; there is no Python
-package installation step. Keep `package.json` and `package-lock.json` together.
-See [dependency maintenance](DEPENDENCIES.md) for update policy and CI security.
+Use `npm ci` with the committed lockfile, not a floating dependency install. The
+CV adapter uses the Python standard library; there is no Python package
+installation step. Keep `package.json` and `package-lock.json` together. See
+[dependency maintenance](DEPENDENCIES.md) for update policy and CI security.
 
-For a local draft preview, use:
+For a local draft preview:
 
 ```bash
 npm run dev:preview -- --host 127.0.0.1 --port 4321
@@ -181,19 +130,20 @@ not run. Once appropriate checks pass, repeat them only for a new change, failur
 or unresolved concern. If the stack changes, update these commands and evidence
 requirements in the same work.
 
-## 5. Release
+## Release
 
-Astra checks the final diff, acceptance criteria, Sol's technical findings, and
-design/editorial quality. Confirm the active branch and staged file list, then
-present the full commit message for approval under `AGENTS.md`. After approval,
-commit with `-s`. Keep commits coherent and describe the resulting behavior.
+The orchestrator checks the final diff, acceptance criteria, review findings, and
+design and editorial quality. Confirm the branch and staged file list, then
+present the full commit message for approval under `CLAUDE.md`. After Andre signs
+off, commit with `-s` and push to `master`.
 
-Before an authorized push to `master`, account for the production impact:
+Before a push to `master`, account for the production impact:
 
-- Repository documentation (`AGENTS.md`, `README.md`, and `docs/`) must never be
-  included in website pages or deployment artifacts. Astro generates explicit routes
-  from `src/` and copies only intentional static assets from `public/`; deployment
-  uploads only `output/`, keeping these documents outside the published site. Check that this remains true after build or hosting changes.
+- Repository material (`CLAUDE.md`, `README.md`, `docs/`, and `.claude/`) must
+  never be included in website pages or deployment artifacts. Astro generates
+  explicit routes from `src/` and copies only intentional static assets from
+  `public/`; deployment uploads only `output/`, and `scripts/verify_site.py`
+  rejects these paths. Check that this remains true after build or hosting changes.
 - `.github/workflows/site.yml` deploys on pushes to `master` and also supports
   manual dispatch and the `cv-updated` repository-dispatch event.
 - The deploy requires a usable `PERSONAL_CV_REPO_TOKEN` secret and Pages access;
@@ -202,33 +152,25 @@ Before an authorized push to `master`, account for the production impact:
 - Existing article, page, feed, and CV paths need to keep working or have an
   intentional migration plan.
 
-After publication, check the Actions result and the affected live pages,
-navigation, and assets. If verification is unavailable, report deployment as
-unverified rather than complete. For a release failure, identify the last working
-release and prepare a focused correction or revert for the applicable commit
-approval. Do not reset `master` or move `legacy` as an automatic rollback.
+After publication, watch the Actions run in the background and check the affected
+live pages, navigation, and assets. If verification is unavailable, report
+deployment as unverified rather than complete. For a release failure, identify
+the last working release and prepare a focused correction or revert for sign-off.
+Do not reset `master` or move `legacy` as an automatic rollback.
 
-`legacy` is a source snapshot, not a frozen deployment artifact: the workflow
-used a separately maintained CV and dependencies with minimum version
-constraints in the original Pelican build. Rebuilding that branch later is not guaranteed to reproduce every
-byte of the original published site.
+`legacy` is a source snapshot, not a frozen deployment artifact: the original
+Pelican build used a separately maintained CV and dependencies with minimum
+version constraints. Rebuilding that branch later is not guaranteed to reproduce
+every byte of the original published site.
 
-## 6. Close and resume
+## Close and resume
 
-Work is ready when the acceptance criteria are met, relevant checks are recorded,
-material review findings are resolved, and Astra has completed the design and
-editorial review appropriate to the change. Release completion additionally
-requires the authorized push and successful deployment verification.
+Work is ready when the acceptance criteria are met, relevant checks pass,
+material review findings are resolved, and the orchestrator has completed the
+design and editorial review appropriate to the change. Release completion
+additionally requires the push and successful deployment verification.
 
-End with the result, verification, limitations, and whether work is prepared,
-committed, pushed, or deployed. Keep the work record current so a later session
-can resume from decisions and evidence rather than reconstructing the conversation.
-
-## Codex documentation
-
-Repository guidance follows the official
-[AGENTS.md discovery mechanism](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
-Model selection must use supported runtime controls, as described in the official
-[subagent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents).
-The role assignments and lifecycle above are this project's policy, chosen by
-Andre, rather than defaults imposed by Codex.
+For initiatives, keep the uncommitted checkpoint file at the worktree root,
+rewritten at handoffs. On resume, reconcile it with git and GitHub Issues. End
+with the result, verification, limitations, and whether work is prepared,
+committed, pushed, or deployed.

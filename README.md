@@ -6,11 +6,10 @@ PDF download. The original Pelican site is preserved on `origin/legacy`.
 
 ## Development workflow
 
-Read [AGENTS.md](AGENTS.md) and [docs/SDLC.md](docs/SDLC.md). Astra leads
-architecture, design, editorial review, and orchestration. Sol on High handles
-subarchitecture, content investigation, and senior/security review. Luna on xhigh
-handles implementation. Current work is described in
-[the revamp brief](docs/work/site-revamp.md).
+Read [CLAUDE.md](CLAUDE.md) and [docs/SDLC.md](docs/SDLC.md). Work is done with
+Claude Code using the `agent-sdlc` skill: the session orchestrates architecture,
+design, and editorial review, and larger initiatives run its build and review
+workflows. GitHub Issues track initiatives.
 
 Changes require editorial review and explicit release authorization under that
 workflow. Repository documentation is never included in the website artifact.
@@ -76,8 +75,8 @@ Reviewed slide images, PDFs, transcript, and presenter cues live in
 routes emit the approved artifacts. Draft lectures use ignored local derivatives
 and the shared preview gate. Source PowerPoint files, authoring documents, raw
 notes, and private research are not build inputs. See
-[the lecture work record](docs/work/ncsu-ai-agents-lecture.md) for routes,
-preparation, synchronization behavior, approvals, and verification commands.
+[docs/LECTURES.md](docs/LECTURES.md) for routes, preparation, synchronization
+behavior, and verification commands.
 
 ## CV
 
@@ -135,7 +134,8 @@ project commands documented above when generating or checking the site.
 - `src/layouts/`, `src/pages/`, `src/styles/`: Astro presentation and routes
 - `public/`: intentional static assets
 - `scripts/`: CV import, fixtures, and artifact validation
-- `docs/`: repository-only workflow and decision records
+- `docs/`: repository-only workflow profile and operational references
+- `.claude/skills/`: repository-local Claude Code skills
 
 ## Discovery and LinkedIn writing
 
@@ -149,12 +149,12 @@ links to `/privacy.html`. No public counter or click events are configured.
 links to the canonical HTML pages and stays free of drafts even in local preview.
 `public/robots.txt` allows search and training crawlers and requests a ten-second
 delay from clients that support it. These files offer guidance, not traffic
-enforcement. See [the preparation record](docs/work/discovery-and-linkedin.md)
+enforcement. See [docs/DISCOVERY.md](docs/DISCOVERY.md)
 for analytics setup and the separate hosting controls needed for abusive traffic.
 
 Use the repository-local
-[linkedin-posts skill](.agents/skills/linkedin-posts/SKILL.md) to prepare posts from
-articles, for example: `Use $linkedin-posts to draft a useful LinkedIn post from
+[linkedin-posts skill](.claude/skills/linkedin-posts/SKILL.md) to prepare posts from
+articles, for example: `/linkedin-posts draft a useful LinkedIn post from
 my latest article, with a link to the full piece.` It keeps drafting separate
 from external publication and uses the site's editorial voice. Private drafts
 and results belong in `.wiki/linkedin/`, outside the site artifact.
