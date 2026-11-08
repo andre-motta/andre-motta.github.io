@@ -1,14 +1,14 @@
 {
   "name": "Andre Lustosa",
-  "role": "Principal Software Engineer & AIPCC Staff Engineer",
+  "role": "Principal Software Engineer, AIPCC Staff Engineer & Team Lead",
   "organization": "Red Hat",
   "location": "Raleigh, North Carolina",
   "email": "alustosa@redhat.com",
   "headline": "Engineering the foundations.",
   "intro": "I build reliable software platforms, lead engineering teams, and work in the open.",
   "about": [
-    "I'm a Principal Software Engineer at Red Hat, serving as Staff Engineer for AI Platform Core Components (AIPCC), where I'm responsible for operational delivery. My work sits where software foundations, accelerator ecosystems, and engineering leadership meet: making complex systems dependable enough for other people to build on.",
-    "Across AIPCC, including the Ecosystems team I previously led, my work spans enterprise Python components and accelerator enablement. That includes package compatibility, cross-architecture validation, software supply chain controls, and vulnerability maintenance. I care about the decisions, evidence, and ownership that make this work sustainable.",
+    "I'm a Principal Software Engineer at Red Hat. I serve as Staff Engineer for AI Platform Core Components (AIPCC), where I'm responsible for operational delivery, and I lead the AIPCC Ecosystems team. My work sits where software foundations, accelerator ecosystems, and engineering leadership meet: making complex systems dependable enough for other people to build on.",
+    "Across AIPCC and within Ecosystems, my work spans enterprise Python components and accelerator enablement. That includes package compatibility, cross-architecture validation, software supply chain controls, and vulnerability maintenance. I care about the decisions, evidence, and ownership that make this work sustainable.",
     "I earned my PhD in Computer Science at North Carolina State University in 2025. My research explored interactive search and optimization for software product-line configuration, with an emphasis on reducing the effort required from decision-makers. Before that, I led software engineering at Oceansoft and worked on data analysis and predictive tooling during an internship at Microsoft.",
     "This is where I write about building software, contributing upstream, and helping engineering teams do their best work. I also build developer tools that make everyday engineering work easier to understand and act on."
   ],
